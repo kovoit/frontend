@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { AppProviders } from '@/app/providers'
+import { createQueryClient } from '@/app/queryClient'
 import { routes } from '@/app/routes'
 import { mockSession } from '@/mocks/db'
 
@@ -14,7 +15,7 @@ export function renderAt(path: string, { asAdmin = false }: RenderOptions = {}) 
   if (asAdmin) mockSession.start(1)
   const router = createMemoryRouter(routes, { initialEntries: [path] })
   render(
-    <AppProviders>
+    <AppProviders queryClient={createQueryClient({ retry: false })}>
       <RouterProvider router={router} />
     </AppProviders>,
   )

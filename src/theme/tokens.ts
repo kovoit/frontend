@@ -28,6 +28,14 @@ export const colors = {
   danger: { 50: '#FDECEC', 100: '#F9D0D1', 500: '#E5484D', 600: '#C9363B', 700: '#A3272C' },
   // Fonds sombres hérités d'Horizon (mode sombre)
   navy: { 700: '#1B254B', 800: '#111C44', 900: '#0B1437' },
+  // Séries de graphiques, ordre fixe (1 = bleu, 2 = orange). Validées par le validateur de palette
+  // dataviz (luminosité, chroma, daltonisme, contraste) sur surface blanche et sur navy-800.
+  chart: {
+    1: '#2A5DB0',
+    2: '#D9731A',
+    'dark-1': '#5B8DEF',
+    'dark-2': '#D2701A',
+  },
   bg: '#F5F7FA',
   surface: '#FFFFFF',
   line: '#E6EAF0',

@@ -26,6 +26,12 @@ export function formatDate(iso: string): string {
   }).format(new Date(iso))
 }
 
+/** Jour ISO "2026-10-08" → "08 oct." (axes de graphiques) */
+export function formatDayShort(isoDay: string): string {
+  return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short', timeZone: TIMEZONE })
+    .format(new Date(`${isoDay}T12:00:00Z`))
+}
+
 /** ISO → "08 oct. 2026 · 07:30" (heure de Lomé) */
 export function formatDateTime(iso: string): string {
   const time = new Intl.DateTimeFormat('fr-FR', {

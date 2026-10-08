@@ -26,7 +26,7 @@ describe('routing du back-office', () => {
     const router = renderAt('/admin', { asAdmin: true })
     const nav = await screen.findByRole('complementary', { name: 'Navigation principale' })
     await userEvent.click(within(nav).getByRole('link', { name: /Dossiers KYC/ }))
-    expect(screen.getByRole('heading', { level: 1, name: 'Dossiers KYC' })).toBeVisible()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Dossiers KYC' })).toBeVisible()
     expect(router.state.location.pathname).toBe('/admin/kyc')
   })
 

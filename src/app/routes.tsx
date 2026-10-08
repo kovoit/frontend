@@ -2,17 +2,64 @@ import { Navigate, type RouteObject } from 'react-router'
 import { env } from '@/config/env'
 import { LoginPage } from '@/features/auth/pages/LoginPage'
 import { RequireAuth } from '@/features/auth/RequireAuth'
-import { BookingsListPage } from '@/features/bookings/pages/BookingsListPage'
-import { DashboardPage } from '@/features/dashboard/pages/DashboardPage'
-import { KycListPage } from '@/features/kyc/pages/KycListPage'
-import { ReportsListPage } from '@/features/reports/pages/ReportsListPage'
-import { SettingsPage } from '@/features/settings/pages/SettingsPage'
-import { TransactionsPage } from '@/features/transactions/pages/TransactionsPage'
-import { TripsListPage } from '@/features/trips/pages/TripsListPage'
-import { UsersListPage } from '@/features/users/pages/UsersListPage'
 import { AdminLayout } from '@/layouts/AdminLayout'
 import { AuthLayout } from '@/layouts/AuthLayout'
 import { NotFoundPage } from './NotFoundPage'
+import { RouteErrorPage } from './RouteErrorPage'
+
+// Pages admin chargées à la demande (bundle initial léger : seule la connexion est incluse).
+const adminPages: RouteObject[] = [
+  {
+    index: true,
+    lazy: () =>
+      import('@/features/dashboard/pages/DashboardPage').then((m) => ({ Component: m.DashboardPage })),
+  },
+  {
+    path: 'kyc',
+    lazy: () => import('@/features/kyc/pages/KycListPage').then((m) => ({ Component: m.KycListPage })),
+  },
+  {
+    path: 'users',
+    lazy: () =>
+      import('@/features/users/pages/UsersListPage').then((m) => ({ Component: m.UsersListPage })),
+  },
+  {
+    path: 'trips',
+    lazy: () =>
+      import('@/features/trips/pages/TripsListPage').then((m) => ({ Component: m.TripsListPage })),
+  },
+  {
+    path: 'bookings',
+    lazy: () =>
+      import('@/features/bookings/pages/BookingsListPage').then((m) => ({
+        Component: m.BookingsListPage,
+      })),
+  },
+  {
+    path: 'reports',
+    lazy: () =>
+      import('@/features/reports/pages/ReportsListPage').then((m) => ({
+        Component: m.ReportsListPage,
+      })),
+  },
+  ...(env.featureWallet
+    ? [
+        {
+          path: 'transactions',
+          lazy: () =>
+            import('@/features/transactions/pages/TransactionsPage').then((m) => ({
+              Component: m.TransactionsPage,
+            })),
+        },
+      ]
+    : []),
+  {
+    path: 'settings',
+    lazy: () =>
+      import('@/features/settings/pages/SettingsPage').then((m) => ({ Component: m.SettingsPage })),
+  },
+  { path: '*', element: <NotFoundPage /> },
+]
 
 // Les routes de détail (/:id) seront ajoutées avec chaque feature.
 export const routes: RouteObject[] = [
@@ -20,6 +67,7 @@ export const routes: RouteObject[] = [
   {
     path: '/',
     element: <AuthLayout />,
+    errorElement: <RouteErrorPage />,
     children: [{ index: true, element: <LoginPage /> }],
   },
   // Ancienne URL de connexion, conservée pour les liens existants.
@@ -31,17 +79,9 @@ export const routes: RouteObject[] = [
         <AdminLayout />
       </RequireAuth>
     ),
-    children: [
-      { index: true, element: <DashboardPage /> },
-      { path: 'kyc', element: <KycListPage /> },
-      { path: 'users', element: <UsersListPage /> },
-      { path: 'trips', element: <TripsListPage /> },
-      { path: 'bookings', element: <BookingsListPage /> },
-      { path: 'reports', element: <ReportsListPage /> },
-      ...(env.featureWallet ? [{ path: 'transactions', element: <TransactionsPage /> }] : []),
-      { path: 'settings', element: <SettingsPage /> },
-      { path: '*', element: <NotFoundPage /> },
-    ],
+    errorElement: <RouteErrorPage />,
+    // Route sans chemin : une erreur dans une page s'affiche dans le layout (sidebar conservée).
+    children: [{ errorElement: <RouteErrorPage />, children: adminPages }],
   },
   { path: '*', element: <NotFoundPage /> },
 ]

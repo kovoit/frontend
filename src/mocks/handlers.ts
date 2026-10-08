@@ -1,6 +1,8 @@
 import { http, HttpResponse } from 'msw'
 import { env } from '@/config/env'
 import type { LoginPayload } from '@/features/auth/types'
+import { PERIODES, type Periode } from '@/features/dashboard/types'
+import { buildMockStats } from './dashboard'
 import { accessTokenFor, MOCK_ACCOUNTS, mockSession, toPublicUser, userFromAuthHeader } from './db'
 
 const url = (path: string) => `${env.apiUrl}${path}`
@@ -38,5 +40,16 @@ export const handlers = [
   http.post(url('/auth/logout/'), () => {
     mockSession.end()
     return new HttpResponse(null, { status: 204 })
+  }),
+
+  http.get(url('/admin/stats/'), ({ request }) => {
+    if (userFromAuthHeader(request.headers.get('Authorization'))?.role !== 'admin') {
+      return HttpResponse.json({ detail: 'Non authentifié.' }, { status: 401 })
+    }
+    const periode = new URL(request.url).searchParams.get('periode') ?? '30j'
+    if (!(periode in PERIODES)) {
+      return HttpResponse.json({ periode: ['Période invalide.'] }, { status: 400 })
+    }
+    return HttpResponse.json(buildMockStats(periode as Periode))
   }),
 ]

@@ -81,6 +81,10 @@ Imports absolus via l'alias `@/` → `src/`.
 | `/admin/settings` | Paramètres | Modifier prix du litre, grille, frais, délais, seuils |
 | `/admin/transactions` | Journal des transactions | Si option portefeuille |
 
+Pages admin chargées à la demande (`lazy` dans `src/app/routes.tsx`) ; une erreur dans une page affiche `RouteErrorPage` dans le layout. Erreurs de chargement API : composant `QueryError` (bouton Réessayer).
+
+Tableau de bord : `GET /admin/stats/?periode=7j|30j|mois` (contrat dans `src/features/dashboard/types.ts`). La période est dans l'URL (`?periode=`). Chaque graphique a une vue tableau (« Afficher les données »).
+
 ## 5. Méthode & règles de développement
 
 1. **Lire le PRD** et le code existant avant toute modification. Pour une nouvelle fonctionnalité, passer par l'agent `prd-guardian` (voir AGENTS.md).
@@ -107,6 +111,7 @@ Relevée sur les maquettes mobiles ; à appliquer au template Horizon.
 | `success-500` | `#22A55B` | Vérifié, terminé, actif |
 | `success-50` | `#E8F7EE` | Fond des badges de succès |
 | `danger-500` | `#E5484D` | Rejeté, suspendu, litige |
+| `chart-1` / `chart-2` | `#2A5DB0` / `#D9731A` (sombre : `#5B8DEF` / `#D2701A`) | Séries de graphiques, ordre fixe. Validées (daltonisme, contraste) ; ne pas utiliser `brand-900` ni `accent-500` dans un graphique (échec du validateur) |
 | `bg` | `#F5F7FA` | Fond de page |
 | `surface` | `#FFFFFF` | Cartes |
 | `text` / `text-muted` | `#0F2A55` / `#6B7A90` | Textes |
