@@ -20,7 +20,8 @@ Un utilisateur a un seul compte et bascule entre les modes passager et conducteu
 
 ### Passager
 
-- [ ] Créer un compte avec son numéro de téléphone (code OTP par SMS)
+- [ ] Créer un compte (nom complet, email, téléphone, mot de passe) et vérifier son numéro par code OTP SMS à 6 chiffres
+- [ ] Se connecter par email et mot de passe
 - [ ] Soumettre son KYC passager
 - [ ] Chercher un trajet : point de départ, point d'arrivée, date, heure
 - [ ] Voir le profil du conducteur : statut vérifié, note, taux de fiabilité, véhicule
@@ -56,6 +57,25 @@ Tout ce que fait le passager, plus :
 - [ ] Suspendre ou réactiver un compte
 - [ ] Modifier les paramètres : prix du litre, grille de prix, frais de service, délais d'annulation
 - [ ] Suivre les indicateurs : trajets, passagers transportés, économies réalisées, utilisateurs vérifiés
+
+## Authentification
+
+Décision du 8 octobre 2026 : la connexion se fait par **email et mot de passe**, comme sur les maquettes. Le téléphone reste obligatoire et vérifié par SMS, car c'est lui qui débloque la recherche de trajets.
+
+**Inscription (app mobile)**
+
+1. Saisie du nom complet, de l'email, du téléphone (+228) et du mot de passe, puis acceptation des CGU et de la politique de confidentialité.
+2. Envoi d'un code OTP à 6 chiffres par SMS au numéro saisi, avec renvoi possible après un délai et modification du numéro possible.
+3. Une fois le code validé, le compte passe au niveau « téléphone vérifié ».
+
+**Connexion** : email et mot de passe, avec « Mot de passe oublié » par email. « Continuer avec Google » figure sur les maquettes ; son activation reste à confirmer (voir Questions ouvertes). Un compte créé via Google doit quand même vérifier son téléphone par SMS.
+
+**Règles**
+
+- Email et téléphone sont uniques.
+- Le mot de passe est stocké haché par le backend (algorithme Django par défaut).
+- Le code OTP SMS d'inscription (6 chiffres) est distinct du code de départ d'une réservation (4 chiffres).
+- Back-office : connexion par email et mot de passe, réservée aux comptes ayant le rôle administrateur.
 
 ## KYC
 
@@ -279,7 +299,7 @@ Le MVP n'utilise pas d'IA : la correspondance, le prix, les statuts et la fiabil
 
 | Table                  | Champs principaux                                                                                                                                                                                    |
 |------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| users                  | id, telephone (unique), nom, prenom, photo, mode_actif (passager, conducteur), statut_compte (actif, suspendu), suspendu_jusqu_au, cree_le                                                           |
+| users                  | id, email (unique), mot_de_passe_hash, google_id (optionnel), telephone (unique), telephone_verifie_le, role (utilisateur, admin), nom, prenom, photo, mode_actif (passager, conducteur), statut_compte (actif, suspendu), suspendu_jusqu_au, cree_le                                                           |
 | kyc_dossiers           | id, user_id, type (passager, conducteur), statut (non_verifie, en_attente, verifie, rejete), motif_rejet, soumis_le, traite_le, traite_par                                                           |
 | kyc_pieces             | id, dossier_id, type_piece (identite, selfie, permis, carte_grise, assurance, photo_vehicule), chemin_fichier privé                                                                                  |
 | vehicules              | id, user_id, marque, modele, couleur, immatriculation, nb_places                                                                                                                                     |
@@ -290,6 +310,8 @@ Le MVP n'utilise pas d'IA : la correspondance, le prix, les statuts et la fiabil
 | signalements           | id, reservation_id, auteur_id, cible_id, motif, statut (ouvert, traite), resolution                                                                                                                  |
 | transactions           | id, user_id, type (recharge, blocage, deblocage, debit, credit, retrait, remboursement), montant, reservation_id, reference_externe, statut, cree_le                                                 |
 | parametres             | cle, valeur, modifie_le, modifie_par                                                                                                                                                                 |
+| kyc_consultations      | id, piece_id, admin_id, consulte_le (journal obligatoire de chaque consultation de pièce)                                                                                                           |
+| otp_sms                | id, telephone, code_hash, expire_le, tentatives, valide_le                                                                                                                                           |
 
 ## Paramètres administrateur (valeurs de départ)
 
@@ -308,6 +330,31 @@ Le MVP n'utilise pas d'IA : la correspondance, le prix, les statuts et la fiabil
 | seuil_incidents           | 3 sur 30 jours                                     | Suspension                  |
 | duree_suspension_j        | 7                                                  | Suspension                  |
 
+## Back-office administrateur (web)
+
+Application web React + TypeScript construite à partir du template Horizon UI et habillée avec la charte Nana Tech. Elle consomme uniquement l'API REST et ne recalcule aucune règle métier.
+
+| Écran | Contenu | Actions | Critères d'acceptation |
+|---|---|---|---|
+| Connexion | Email, mot de passe | Se connecter, mot de passe oublié | Un compte sans rôle admin est refusé ; session expirée → retour à la connexion |
+| Tableau de bord | Trajets publiés et terminés, passagers transportés, économies réalisées (FCFA), utilisateurs vérifiés, dossiers KYC en attente, litiges ouverts ; filtres par période | — | Les chiffres viennent de l'API ; les cartes « en attente » mènent vers la liste filtrée |
+| Dossiers KYC | File des dossiers `en_attente` (les plus anciens d'abord), filtres par type et statut ; détail avec les pièces, l'identité et le véhicule | Valider ; rejeter avec un motif obligatoire | Le motif est obligatoire au rejet ; les pièces s'affichent via une URL signée ; chaque ouverture est journalisée |
+| Utilisateurs | Liste avec recherche (nom, email, téléphone) et filtres (statut KYC, compte actif ou suspendu) ; fiche avec profil, KYC, véhicule, fiabilité, notes, historique | Suspendre avec un motif et une durée ; réactiver | La suspension passe par une modale de confirmation ; l'UI affiche l'effet (réservations à venir annulées) renvoyé par l'API |
+| Trajets | Liste filtrable (statut, date, conducteur) ; détail avec carte, points de prise en charge, places, réservations | Consulter | Statuts : `publie`, `complet`, `en_cours`, `termine`, `annule` |
+| Réservations | Liste filtrable par statut ; détail avec la chronologie des statuts horodatés, le prix et les frais | Consulter | Le code de départ n'est jamais affiché |
+| Signalements et litiges | File des signalements `ouvert` ; détail avec le trajet, la réservation, les parties et leurs notes | Marquer traité avec une résolution ; trancher un litige (clôture, remboursement si portefeuille) | La résolution est obligatoire ; un litige tranché passe à `cloturee` |
+| Paramètres | Toutes les clés du tableau « Paramètres administrateur » | Modifier une valeur | Validation des types et des bornes ; affichage de `modifie_le` et `modifie_par` |
+| Transactions | Journal filtrable (type, utilisateur, période) | Consulter | Uniquement si l'option portefeuille est retenue |
+
+## Charte graphique (Nana Tech)
+
+Référence : les maquettes mobiles de `docs/Nana Tech.zip`, appliquées au mobile comme au back-office.
+
+- Bleu marine `#0F2A55` (couleur principale), orange `#F28C28` (accent), vert `#22A55B` (vérifié, succès), fond `#F5F7FA`, cartes blanches.
+- Police Plus Jakarta Sans ; coins arrondis d'environ 16 à 20 px ; ombres douces.
+- Badges de statut arrondis, avec une icône et un libellé.
+- Signature : « Même trajet, moins cher ».
+
 ## Questions ouvertes
 
 - [ ] MVP en espèces ou portefeuille dès le départ ?
@@ -315,3 +362,7 @@ Le MVP n'utilise pas d'IA : la correspondance, le prix, les statuts et la fiabil
 - [ ] Agrégateur de paiement retenu et frais réels
 - [ ] Google Maps ou OSRM pour les distances
 - [ ] Résultats du relevé terrain pour valider la grille de prix
+- [ ] Connexion « Continuer avec Google » : à activer dans le MVP ?
+- [ ] Écart avec les maquettes : un sélecteur **Moto / Voiture** apparaît sur l'écran de recherche, mais le PRD ne couvre que la voiture (la moto implique une autre grille de prix et une seule place)
+- [ ] Écart avec les maquettes : un bouton **Message** apparaît sur l'écran de suivi, alors que la messagerie est hors MVP (garder seulement « Appeler » ?)
+- [ ] Écart avec les maquettes : les pièces du KYC passager y sont la photo de profil, l'avant et l'arrière de la pièce d'identité, puis un selfie ; faut-il ajouter `identite_recto`, `identite_verso` et `photo_profil` à `kyc_pieces.type_piece` ?
