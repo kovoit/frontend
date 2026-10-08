@@ -9,6 +9,25 @@ export type Paginated<T> = {
   results: T[]
 }
 
+/** Identité courte d'un utilisateur, imbriquée dans d'autres ressources. */
+export type UserSummary = {
+  id: number
+  nom: string
+  prenom: string
+  email: string
+  telephone: string
+}
+
+/** Table `vehicules` du PRD. */
+export type Vehicule = {
+  id: number
+  marque: string
+  modele: string
+  couleur: string
+  immatriculation: string
+  nb_places: number
+}
+
 /** Point géographique tel que décrit dans le modèle de données (lat, lng, libellé). */
 export type GeoPoint = {
   lat: number

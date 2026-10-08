@@ -2,8 +2,11 @@ import { http, HttpResponse } from 'msw'
 import { env } from '@/config/env'
 import type { LoginPayload } from '@/features/auth/types'
 import { PERIODES, type Periode } from '@/features/dashboard/types'
+import { activityHandlers } from './activityHandlers'
+import { adminHandlers } from './adminHandlers'
 import { buildMockStats } from './dashboard'
 import { accessTokenFor, MOCK_ACCOUNTS, mockSession, toPublicUser, userFromAuthHeader } from './db'
+import { db } from './people'
 
 const url = (path: string) => `${env.apiUrl}${path}`
 
@@ -50,6 +53,16 @@ export const handlers = [
     if (!(periode in PERIODES)) {
       return HttpResponse.json({ periode: ['Période invalide.'] }, { status: 400 })
     }
-    return HttpResponse.json(buildMockStats(periode as Periode))
+    const stats = buildMockStats(periode as Periode)
+    // Files de travail cohérentes avec les listes simulées (KYC, signalements, litiges).
+    stats.a_traiter = {
+      kyc_en_attente: db.dossiers.filter((d) => d.statut === 'en_attente').length,
+      signalements_ouverts: db.signalements.filter((s) => s.statut === 'ouvert').length,
+      litiges: db.reservations.filter((r) => r.statut === 'litige').length,
+    }
+    return HttpResponse.json(stats)
   }),
+
+  ...adminHandlers,
+  ...activityHandlers,
 ]

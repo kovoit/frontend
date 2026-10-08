@@ -83,6 +83,12 @@ Imports absolus via l'alias `@/` → `src/`.
 
 Pages admin chargées à la demande (`lazy` dans `src/app/routes.tsx`) ; une erreur dans une page affiche `RouteErrorPage` dans le layout. Erreurs de chargement API : composant `QueryError` (bouton Réessayer).
 
+Listes (KYC, utilisateurs…) : filtres, recherche (`q`) et page dans l'URL via `useListParams` ; tableau `DataTable` (TanStack Table, pagination serveur, `PAGE_SIZE` = 20 aligné sur DRF) ; recherche avec anti-rebond (`SearchInput`). Actions sensibles dans une `Modal` (focus piégé, Échap) avec motif obligatoire (10 caractères minimum, choix UI).
+
+KYC : contrat dans `src/features/kyc/types.ts`. Les pièces ne sont chargées qu'au clic « Afficher » (`PieceViewer`), l'URL signée est redemandée à chaque affichage (`gcTime: 0`) ; le backend doit servir ces fichiers avec `Cache-Control: no-store`. Utilisateurs : contrat dans `src/features/users/types.ts` ; durées de suspension manuelle proposées : 7 j, 30 j, ou jusqu'à réactivation.
+
+Trajets, réservations, signalements : contrats dans `src/features/{trips,bookings,reports}/types.ts`. Carte : `RouteStops` (Leaflet + tuiles OpenStreetMap, chargé à la demande) ; la liste ordonnée des arrêts porte l'information, la carte l'illustre. En production, prévoir un fournisseur de tuiles adapté au trafic (la politique d'usage des tuiles OSM limite les volumes). Un signalement sur une réservation en `litige` se **tranche** (décision conducteur / passager + justification → réservation `cloturee`) ; les autres se **traitent** (résolution obligatoire).
+
 Tableau de bord : `GET /admin/stats/?periode=7j|30j|mois` (contrat dans `src/features/dashboard/types.ts`). La période est dans l'URL (`?periode=`). Chaque graphique a une vue tableau (« Afficher les données »).
 
 ## 5. Méthode & règles de développement
@@ -130,6 +136,7 @@ Relevée sur les maquettes mobiles ; à appliquer au template Horizon.
 - Ne pas confondre l'**OTP SMS d'inscription (6 chiffres)** et le **code de départ (4 chiffres)** d'une réservation.
 - Implémentation : `src/features/auth/` (`AuthProvider` restaure la session au chargement via le refresh, `RequireAuth` protège `/admin/*`, `LoginPage`). Un compte valide sans rôle `admin` est refusé côté front ; le backend doit aussi le refuser.
 - Contrat API attendu (détaillé dans `src/features/auth/types.ts`) : `POST /auth/login/`, `POST /auth/token/refresh/`, `GET /auth/me/`, `POST /auth/logout/`.
+- Données du mode mock : `src/mocks/people.ts` (36 utilisateurs et dossiers KYC fictifs) et `src/mocks/trips.ts` (36 trajets à Lomé, réservations, signalements), en mémoire, remis à zéro entre chaque test via `resetMockDb`.
 - Comptes du mode mock (MSW uniquement) : `admin@kovoit.tg` / `Admin123!` (admin), `conducteur@kovoit.tg` / `Passe123!` (non admin, refusé).
 
 ## 8. Droits d'accès & machine à états (rappel du PRD)

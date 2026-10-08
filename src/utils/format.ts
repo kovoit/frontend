@@ -16,6 +16,16 @@ export function formatNumber(value: number): string {
   return normalizeSpaces(integer.format(value))
 }
 
+/** 8.4 → "8,4 km" */
+export function formatKm(km: number): string {
+  return `${normalizeSpaces(new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(km))} km`
+}
+
+/** 0.923 → "92 %" (ratio renvoyé par l'API, arrondi à l'unité) */
+export function formatPercent(ratio: number): string {
+  return `${Math.round(ratio * 100)} %`
+}
+
 /** ISO → "08 oct. 2026" (heure de Lomé) */
 export function formatDate(iso: string): string {
   return new Intl.DateTimeFormat('fr-FR', {

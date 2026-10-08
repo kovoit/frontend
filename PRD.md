@@ -365,4 +365,6 @@ Référence : les maquettes mobiles de `docs/Nana Tech.zip`, appliquées au mobi
 - [ ] Connexion « Continuer avec Google » : à activer dans le MVP ?
 - [ ] Écart avec les maquettes : un sélecteur **Moto / Voiture** apparaît sur l'écran de recherche, mais le PRD ne couvre que la voiture (la moto implique une autre grille de prix et une seule place)
 - [ ] Écart avec les maquettes : un bouton **Message** apparaît sur l'écran de suivi, alors que la messagerie est hors MVP (garder seulement « Appeler » ?)
+- [ ] Arbitrage d'un litige : le back-office propose « en faveur du conducteur » (montant versé) ou « en faveur du passager » (remboursement). Faut-il un partage partiel ? Que signifie la décision si le MVP démarre en espèces ?
+- [ ] Ajouter `cree_le` à la table `signalements` (nécessaire pour trier la file de traitement)
 - [ ] Écart avec les maquettes : les pièces du KYC passager y sont la photo de profil, l'avant et l'arrière de la pièce d'identité, puis un selfie ; faut-il ajouter `identite_recto`, `identite_verso` et `photo_profil` à `kyc_pieces.type_piece` ?
