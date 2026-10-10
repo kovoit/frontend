@@ -26,6 +26,11 @@ vi.mock('react-leaflet', () => ({
 }))
 vi.mock('leaflet/dist/leaflet.css', () => ({}))
 
+// jsdom n'implémente pas les URL blob: (visionneuse des pièces KYC).
+let blobCounter = 0
+URL.createObjectURL = () => `blob:test/${++blobCounter}`
+URL.revokeObjectURL = () => undefined
+
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 afterEach(() => {
   cleanup()

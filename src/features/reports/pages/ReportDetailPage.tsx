@@ -8,17 +8,17 @@ import { DescriptionList } from '@/components/ui/DescriptionList'
 import { QueryError } from '@/components/ui/QueryError'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { StatusBadge } from '@/components/ui/StatusBadge'
-import { formatDateTime, formatFcfa } from '@/utils/format'
+import { formatDateTime, formatFcfa, shortId } from '@/utils/format'
 import { useReport } from '../api'
 import { ResolutionPanel } from '../components/ResolutionPanel'
 
 const DECISION_LABEL = {
-  conducteur: 'en faveur du conducteur',
-  passager: 'en faveur du passager',
+  crediter_conducteur: 'en faveur du conducteur (payé)',
+  rembourser_passager: 'en faveur du passager (remboursé)',
 } as const
 
 export function ReportDetailPage() {
-  const id = Number(useParams().id)
+  const id = useParams().id ?? ''
   const { data: s, isPending, isError, error, refetch } = useReport(id)
 
   if (isPending) {
@@ -46,7 +46,7 @@ export function ReportDetailPage() {
       <BackLink to="/admin/reports" label="Retour aux signalements" />
 
       <div className="flex flex-wrap items-center gap-3">
-        <h2 className="text-xl font-bold">Signalement #{s.id}</h2>
+        <h2 className="text-xl font-bold">Signalement #{shortId(s.id)}</h2>
         <StatusBadge domain="signalement" value={s.statut} />
         {res.statut === 'litige' && <StatusBadge domain="reservation" value="litige" />}
       </div>
@@ -80,7 +80,7 @@ export function ReportDetailPage() {
 
           <Card className="gap-4 p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-lg font-bold">Réservation #{res.id}</h2>
+              <h2 className="text-lg font-bold">Réservation #{shortId(res.id)}</h2>
               <StatusBadge domain="reservation" value={res.statut} />
             </div>
             <DescriptionList

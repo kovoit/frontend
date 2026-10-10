@@ -57,7 +57,7 @@ export function AccountActions({ user, onDone }: AccountActionsProps) {
 
   const onSuspend = handleSubmit(({ motif, duree }) =>
     suspend.mutate(
-      { motif, duree_jours: duree ? Number(duree) : null },
+      { motif, jours: duree ? Number(duree) : null },
       {
         onSuccess: ({ reservations_annulees }) => {
           close()

@@ -12,7 +12,7 @@ type RenderOptions = {
 
 /** Rend l'application complète à une URL donnée. */
 export function renderAt(path: string, { asAdmin = false }: RenderOptions = {}) {
-  if (asAdmin) mockSession.start(1)
+  if (asAdmin) mockSession.start('1')
   const router = createMemoryRouter(routes, { initialEntries: [path] })
   render(
     <AppProviders queryClient={createQueryClient({ retry: false })}>

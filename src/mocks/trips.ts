@@ -73,7 +73,7 @@ export type MockSignalement = {
   resolution: string | null
   decision: DecisionLitige | null
   traite_le: string | null
-  traite_par: { id: number; nom: string; prenom: string } | null
+  traite_par: { id: string; nom: string; prenom: string } | null
 }
 
 const MIN = 60 * 1000

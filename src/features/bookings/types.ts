@@ -1,15 +1,15 @@
-import type { GeoPoint, UserSummary } from '@/api/types'
+import type { Id, GeoPoint, UserSummary } from '@/api/types'
 import type { ReservationStatus, SignalementStatus } from '@/config/enums'
 
-// Contrat attendu de l'API (à implémenter côté backend DRF), réservé au rôle admin :
-//   GET /admin/reservations/?statut=&search=&trajet=&page=   → Paginated<ReservationListItem>
-//       tri : cree_le décroissant ; search sur passager et conducteur (nom, téléphone)
-//   GET /admin/reservations/{id}/                            → ReservationDetail
-// Le code de départ (code_depart_hash) n'est JAMAIS renvoyé, même à l'admin.
+// Contrat de l'API (backend : apps/reservations/api/admin_views.py), réservé aux admins :
+//   GET /admin/reservations/?statut=&recherche=&trajet=<uuid>&page=  → Paginated<ReservationListItem>
+//       tri : cree_le décroissant ; recherche sur passager et conducteur (nom, prénom, téléphone, email)
+//   GET /admin/reservations/{id}/                                    → ReservationDetail
+// Le code de départ n'est JAMAIS renvoyé, même à l'admin.
 
 export type ReservationListItem = {
-  id: number
-  trajet_id: number
+  id: Id
+  trajet_id: Id
   passager: UserSummary
   conducteur: UserSummary
   /** Libellé du point de prise en charge choisi */
@@ -25,17 +25,19 @@ export type ReservationListItem = {
 }
 
 export type ReservationDetail = ReservationListItem & {
-  point: GeoPoint & { ordre: number }
+  point: GeoPoint & { id: Id; ordre: number }
   arrivee: GeoPoint
-  /** Distance facturée : du point de prise en charge à l'arrivée du passager (km) */
-  distance_km: number
-  /** Horodatage de chaque changement de statut, du plus ancien au plus récent */
+  /** Distance facturée : du point de prise en charge à l'arrivée du passager (km) ; null si inconnue */
+  distance_km: number | null
+  /** Annulation à moins de delai_annulation_min du départ (compte dans la fiabilité) */
+  annulation_tardive: boolean
+  /** Statuts atteints, du plus ancien au plus récent (« demandée » = date de création) */
   historique: Array<{ statut: ReservationStatus; le: string }>
-  signalements: Array<{ id: number; motif: string; statut: SignalementStatus; cree_le: string }>
+  signalements: Array<{ id: Id; motif: string; statut: SignalementStatus; cree_le: string }>
 }
 
 export type ReservationListFilters = {
   statut: string
-  search: string
+  recherche: string
   page: number
 }

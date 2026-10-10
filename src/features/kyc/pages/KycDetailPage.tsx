@@ -15,7 +15,7 @@ import { DecisionPanel } from '../components/DecisionPanel'
 import { PieceViewer } from '../components/PieceViewer'
 
 export function KycDetailPage() {
-  const id = Number(useParams().id)
+  const id = useParams().id ?? ''
   const { data: dossier, isPending, isError, error, refetch } = useKycDossier(id)
 
   if (isPending) {
@@ -32,7 +32,7 @@ export function KycDetailPage() {
     return <QueryError error={error} onRetry={() => void refetch()} />
   }
 
-  const fullName = `${dossier.user.prenom} ${dossier.user.nom}`
+  const fullName = `${dossier.utilisateur.prenom} ${dossier.utilisateur.nom}`
 
   return (
     <div className="flex flex-col gap-5">
@@ -81,8 +81,8 @@ export function KycDetailPage() {
             <DescriptionList
               items={[
                 { label: 'Nom', value: fullName },
-                { label: 'Téléphone', value: dossier.user.telephone },
-                { label: 'Email', value: dossier.user.email },
+                { label: 'Téléphone', value: dossier.utilisateur.telephone },
+                { label: 'Email', value: dossier.utilisateur.email },
                 {
                   label: 'Soumis le',
                   value: dossier.soumis_le ? formatDateTime(dossier.soumis_le) : '—',
@@ -90,7 +90,7 @@ export function KycDetailPage() {
               ]}
             />
             <Link
-              to={`/admin/users/${dossier.user.id}`}
+              to={`/admin/users/${dossier.utilisateur.id}`}
               className="text-sm font-semibold text-brand-700 hover:underline dark:text-brand-200"
             >
               Voir la fiche utilisateur

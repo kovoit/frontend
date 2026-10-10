@@ -1,5 +1,6 @@
 import type { Vehicule } from '@/api/types'
 import type { CompteStatus, KycStatus, KycType, PieceType } from '@/config/enums'
+import { buildParametres } from './parametres'
 import { buildTrips } from './trips'
 
 // Base de données fictive en mémoire (mode mock et tests). Personnes et documents imaginaires.
@@ -55,7 +56,7 @@ export type MockDossier = {
   statut: KycStatus
   soumis_le: string | null
   traite_le: string | null
-  traite_par: { id: number; nom: string; prenom: string } | null
+  traite_par: { id: string; nom: string; prenom: string } | null
   motif_rejet: string | null
   pieces: MockPiece[]
 }
@@ -67,7 +68,7 @@ const PIECES: Record<KycType, PieceType[]> = {
 
 const PASSAGER_CYCLE: KycStatus[] = ['verifie', 'en_attente', 'verifie', 'rejete', 'en_attente', 'non_verifie']
 const CONDUCTEUR_CYCLE: KycStatus[] = ['en_attente', 'verifie', 'verifie', 'rejete']
-const ADMIN = { id: 1, nom: 'Kovoit', prenom: 'Admin' }
+const ADMIN = { id: '1', nom: 'Kovoit', prenom: 'Admin' }
 
 const slug = (value: string) =>
   value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
@@ -108,7 +109,9 @@ function build() {
       nb_notes: reservations * 2,
       vehicule: isDriver
         ? {
-            id: 300 + i,
+            id: String(300 + i),
+            type_vehicule: 'voiture',
+            photo: null,
             ...vehicle,
             immatriculation: `TG ${1000 + ((i * 37) % 9000)} ${String.fromCharCode(65 + (i % 26))}${String.fromCharCode(65 + ((i * 3) % 26))}`,
             nb_places: 4,
@@ -137,12 +140,12 @@ function build() {
     if (isDriver) addDossier('conducteur', user.kyc_conducteur)
   }
 
-  return { users, dossiers, ...buildTrips(users, MOCK_NOW, ADMIN) }
+  return { users, dossiers, parametres: buildParametres(MOCK_NOW), ...buildTrips(users, MOCK_NOW, ADMIN) }
 }
 
 export let db = build()
 /** Journal des consultations de pièces (PRD : chaque consultation est tracée). */
-export let pieceConsultations: Array<{ piece_id: number; admin_id: number; consulte_le: string }> = []
+export let pieceConsultations: Array<{ piece_id: number; admin_id: string; consulte_le: string }> = []
 
 export function resetMockDb() {
   db = build()

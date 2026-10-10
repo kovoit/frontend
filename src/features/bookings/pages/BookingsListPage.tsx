@@ -41,7 +41,7 @@ const COLUMNS = [
 export function BookingsListPage() {
   const { values, page, setFilters, setPage } = useListParams(['statut', 'q'] as const)
   const statut = values.statut in RESERVATION_STATUS ? values.statut : ''
-  const filters = useMemo(() => ({ statut, search: values.q, page }), [statut, values.q, page])
+  const filters = useMemo(() => ({ statut, recherche: values.q, page }), [statut, values.q, page])
   const { data, isPending, isError, error, refetch, isFetching } = useBookingList(filters)
 
   return (

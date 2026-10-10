@@ -14,7 +14,7 @@ import { useRejectKyc, useValidateKyc } from '../api'
 import type { KycDossierDetail } from '../types'
 
 const rejectSchema = z.object({
-  motif_rejet: z
+  motif: z
     .string()
     .trim()
     .min(10, 'Précisez le motif (10 caractères minimum) : il sera communiqué au demandeur.')
@@ -32,7 +32,7 @@ export function DecisionPanel({ dossier }: { dossier: KycDossierDetail }) {
   const [dialog, setDialog] = useState<'valider' | 'rejeter' | null>(null)
   const validate = useValidateKyc(dossier.id)
   const reject = useRejectKyc(dossier.id)
-  const fullName = `${dossier.user.prenom} ${dossier.user.nom}`
+  const fullName = `${dossier.utilisateur.prenom} ${dossier.utilisateur.nom}`
 
   const {
     register,
@@ -53,13 +53,13 @@ export function DecisionPanel({ dossier }: { dossier: KycDossierDetail }) {
     reject.mutate(values, {
       onSuccess: () => setDialog(null),
       onError: (error) => {
-        const message = toApiError(error).fieldErrors.motif_rejet?.[0]
-        if (message) setError('motif_rejet', { message })
+        const message = toApiError(error).fieldErrors.motif?.[0]
+        if (message) setError('motif', { message })
       },
     }),
   )
 
-  const mutationError = validate.error ?? (reject.isError && !errors.motif_rejet ? reject.error : null)
+  const mutationError = validate.error ?? (reject.isError && !errors.motif ? reject.error : null)
 
   return (
     <Card className="gap-4 p-5">
@@ -134,8 +134,8 @@ export function DecisionPanel({ dossier }: { dossier: KycDossierDetail }) {
             label="Motif du rejet"
             placeholder="Ex. : photo de la pièce d'identité floue, merci de la reprendre en pleine lumière."
             hint="Soyez précis : le demandeur doit savoir quoi corriger."
-            error={errors.motif_rejet?.message}
-            {...register('motif_rejet')}
+            error={errors.motif?.message}
+            {...register('motif')}
           />
         </form>
       </Modal>

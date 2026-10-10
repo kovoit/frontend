@@ -1,6 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/api/client'
-import type { Paginated } from '@/api/types'
+import type { Id, Paginated } from '@/api/types'
 import type {
   SuspendPayload,
   SuspendResponse,
@@ -12,17 +12,17 @@ import type {
 export const userKeys = {
   all: ['users'] as const,
   list: (filters: UserListFilters) => ['users', 'list', filters] as const,
-  detail: (id: number) => ['users', 'detail', id] as const,
+  detail: (id: Id) => ['users', 'detail', id] as const,
 }
 
 export function useUserList(filters: UserListFilters) {
   return useQuery({
     queryKey: userKeys.list(filters),
     queryFn: async () => {
-      const { data } = await api.get<Paginated<UserListItem>>('/admin/users/', {
+      const { data } = await api.get<Paginated<UserListItem>>('/admin/utilisateurs/', {
         params: {
-          search: filters.search || undefined,
-          statut_compte: filters.statut_compte || undefined,
+          recherche: filters.recherche || undefined,
+          statut: filters.statut || undefined,
           page: filters.page > 1 ? filters.page : undefined,
         },
       })
@@ -32,11 +32,11 @@ export function useUserList(filters: UserListFilters) {
   })
 }
 
-export function useUser(id: number) {
+export function useUser(id: Id) {
   return useQuery({
     queryKey: userKeys.detail(id),
     queryFn: async () => {
-      const { data } = await api.get<UserDetail>(`/admin/users/${id}/`)
+      const { data } = await api.get<UserDetail>(`/admin/utilisateurs/${id}/`)
       return data
     },
   })
@@ -51,22 +51,22 @@ function useInvalidateAfterAccountChange() {
   }
 }
 
-export function useSuspendUser(id: number) {
+export function useSuspendUser(id: Id) {
   const refresh = useInvalidateAfterAccountChange()
   return useMutation({
     mutationFn: async (payload: SuspendPayload) => {
-      const { data } = await api.post<SuspendResponse>(`/admin/users/${id}/suspendre/`, payload)
+      const { data } = await api.post<SuspendResponse>(`/admin/utilisateurs/${id}/suspendre/`, payload)
       return data
     },
-    onSuccess: (data) => refresh(data.user),
+    onSuccess: (data) => refresh(data.utilisateur),
   })
 }
 
-export function useReactivateUser(id: number) {
+export function useReactivateUser(id: Id) {
   const refresh = useInvalidateAfterAccountChange()
   return useMutation({
     mutationFn: async () => {
-      const { data } = await api.post<UserDetail>(`/admin/users/${id}/reactiver/`)
+      const { data } = await api.post<UserDetail>(`/admin/utilisateurs/${id}/reactiver/`)
       return data
     },
     onSuccess: refresh,

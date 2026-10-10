@@ -88,7 +88,7 @@ export function TripsListPage() {
   const { values, page, setFilters, setPage } = useListParams(['statut', 'q', 'date'] as const)
   const statut = values.statut in TRAJET_STATUS ? values.statut : ''
   const filters = useMemo(
-    () => ({ statut, search: values.q, date: values.date, page }),
+    () => ({ statut, recherche: values.q, date: values.date, page }),
     [statut, values.q, values.date, page],
   )
   const { data, isPending, isError, error, refetch, isFetching } = useTripList(filters)

@@ -2,7 +2,7 @@ import { MdChevronRight } from 'react-icons/md'
 import { Link } from 'react-router'
 import type { Column } from '@/components/ui/DataTable'
 import { StatusBadge } from '@/components/ui/StatusBadge'
-import { formatDateTime, formatFcfa } from '@/utils/format'
+import { formatDateTime, formatFcfa, shortId } from '@/utils/format'
 import type { ReservationListItem } from '../types'
 
 const linkClass =
@@ -17,7 +17,7 @@ const personCell = (person: ReservationListItem['passager']) => (
 export const bookingIdColumn: Column<ReservationListItem> = {
   id: 'id',
   header: 'N°',
-  cell: (res) => <span className="font-semibold tabular-nums">#{res.id}</span>,
+  cell: (res) => <span className="font-semibold tabular-nums">#{shortId(res.id)}</span>,
 }
 
 export const bookingPassengerColumn: Column<ReservationListItem> = {

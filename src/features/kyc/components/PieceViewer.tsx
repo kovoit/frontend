@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { MdBadge, MdDirectionsCar, MdFace, MdLock, MdVisibility, MdVisibilityOff } from 'react-icons/md'
 import { toApiError } from '@/api/client'
 import { Button } from '@/components/ui/Button'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { PIECE_TYPE, type PieceType } from '@/config/enums'
-import { usePieceUrl } from '../api'
+import { usePieceFile } from '../api'
 import type { KycPiece } from '../types'
 
 const ICONS: Record<PieceType, typeof MdBadge> = {
@@ -16,13 +16,38 @@ const ICONS: Record<PieceType, typeof MdBadge> = {
   photo_vehicule: MdDirectionsCar,
 }
 
+/** Affiche le fichier via une URL `blob:` locale, révoquée dès que l'aperçu disparaît. */
+function BlobPreview({ blob, title }: { blob: Blob; title: string }) {
+  const imageRef = useRef<HTMLImageElement>(null)
+  const frameRef = useRef<HTMLIFrameElement>(null)
+  const isPdf = blob.type === 'application/pdf'
+
+  useEffect(() => {
+    const element = isPdf ? frameRef.current : imageRef.current
+    if (!element) return
+    const url = URL.createObjectURL(blob)
+    element.src = url
+    return () => {
+      element.removeAttribute('src')
+      URL.revokeObjectURL(url)
+    }
+  }, [blob, isPdf])
+
+  return isPdf ? (
+    <iframe ref={frameRef} title={title} className="h-full w-full" />
+  ) : (
+    <img ref={imageRef} alt={title} draggable={false} className="h-full w-full object-contain" />
+  )
+}
+
 /**
  * Pièce KYC : rien n'est chargé tant que l'admin ne clique pas sur « Afficher ».
- * L'URL signée est demandée à chaque affichage (consultation journalisée par l'API) et jamais conservée.
+ * Le fichier est retéléchargé à chaque affichage (consultation journalisée par l'API),
+ * gardé en mémoire uniquement le temps de l'affichage, jamais via une URL publique.
  */
 export function PieceViewer({ piece, ownerName }: { piece: KycPiece; ownerName: string }) {
   const [visible, setVisible] = useState(false)
-  const { data, isFetching, isError, error } = usePieceUrl(piece.id, visible)
+  const { data, isFetching, isError, error } = usePieceFile(piece.id, visible)
   const label = PIECE_TYPE[piece.type_piece]
   const Icon = ICONS[piece.type_piece]
 
@@ -64,13 +89,7 @@ export function PieceViewer({ piece, ownerName }: { piece: KycPiece; ownerName: 
             {toApiError(error).message}
           </p>
         ) : data ? (
-          <img
-            src={data.url}
-            alt={`${label} de ${ownerName}`}
-            referrerPolicy="no-referrer"
-            draggable={false}
-            className="h-full w-full object-contain"
-          />
+          <BlobPreview blob={data} title={`${label} de ${ownerName}`} />
         ) : null}
       </div>
     </div>

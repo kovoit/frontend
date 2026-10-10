@@ -8,7 +8,7 @@ import { SegmentedControl } from '@/components/ui/SegmentedControl'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { useListParams } from '@/hooks/useListParams'
-import { formatDateTime } from '@/utils/format'
+import { formatDateTime, shortId } from '@/utils/format'
 import { useReportList } from '../api'
 import type { SignalementListItem } from '../types'
 
@@ -47,7 +47,7 @@ const COLUMNS: Column<SignalementListItem>[] = [
     header: 'Réservation',
     cell: (s) => (
       <span className="flex flex-wrap items-center gap-2">
-        <span className="tabular-nums">#{s.reservation.id}</span>
+        <span className="tabular-nums">#{shortId(s.reservation.id)}</span>
         <StatusBadge domain="reservation" value={s.reservation.statut} />
       </span>
     ),

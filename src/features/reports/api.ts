@@ -1,6 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/api/client'
-import type { Paginated } from '@/api/types'
+import type { Id, Paginated } from '@/api/types'
 import type {
   DecisionLitige,
   SignalementDetail,
@@ -10,7 +10,7 @@ import type {
 
 export const reportKeys = {
   list: (filters: SignalementListFilters) => ['reports', 'list', filters] as const,
-  detail: (id: number) => ['reports', 'detail', id] as const,
+  detail: (id: Id) => ['reports', 'detail', id] as const,
 }
 
 export function useReportList(filters: SignalementListFilters) {
@@ -29,7 +29,7 @@ export function useReportList(filters: SignalementListFilters) {
   })
 }
 
-export function useReport(id: number) {
+export function useReport(id: Id) {
   return useQuery({
     queryKey: reportKeys.detail(id),
     queryFn: async () => {
@@ -39,12 +39,13 @@ export function useReport(id: number) {
   })
 }
 
-function useReportAction<TPayload>(id: number, action: 'traiter' | 'trancher') {
+/** Traitement simple ou arbitrage : un seul endpoint, la décision n'est exigée que pour un litige. */
+function useReportAction<TPayload>(id: Id) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (payload: TPayload) => {
       const { data } = await api.post<SignalementDetail>(
-        `/admin/signalements/${id}/${action}/`,
+        `/admin/signalements/${id}/traiter/`,
         payload,
       )
       return data
@@ -59,6 +60,6 @@ function useReportAction<TPayload>(id: number, action: 'traiter' | 'trancher') {
   })
 }
 
-export const useResolveReport = (id: number) => useReportAction<{ resolution: string }>(id, 'traiter')
-export const useArbitrateDispute = (id: number) =>
-  useReportAction<{ decision: DecisionLitige; resolution: string }>(id, 'trancher')
+export const useResolveReport = (id: Id) => useReportAction<{ resolution: string }>(id)
+export const useArbitrateDispute = (id: Id) =>
+  useReportAction<{ decision: DecisionLitige; resolution: string }>(id)

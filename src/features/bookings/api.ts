@@ -1,11 +1,11 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { api } from '@/api/client'
-import type { Paginated } from '@/api/types'
+import type { Id, Paginated } from '@/api/types'
 import type { ReservationDetail, ReservationListFilters, ReservationListItem } from './types'
 
 export const bookingKeys = {
   list: (filters: ReservationListFilters) => ['bookings', 'list', filters] as const,
-  detail: (id: number) => ['bookings', 'detail', id] as const,
+  detail: (id: Id) => ['bookings', 'detail', id] as const,
 }
 
 export function useBookingList(filters: ReservationListFilters) {
@@ -15,7 +15,7 @@ export function useBookingList(filters: ReservationListFilters) {
       const { data } = await api.get<Paginated<ReservationListItem>>('/admin/reservations/', {
         params: {
           statut: filters.statut || undefined,
-          search: filters.search || undefined,
+          recherche: filters.recherche || undefined,
           page: filters.page > 1 ? filters.page : undefined,
         },
       })
@@ -25,7 +25,7 @@ export function useBookingList(filters: ReservationListFilters) {
   })
 }
 
-export function useBooking(id: number) {
+export function useBooking(id: Id) {
   return useQuery({
     queryKey: bookingKeys.detail(id),
     queryFn: async () => {

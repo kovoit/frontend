@@ -30,7 +30,7 @@ const RESERVATION_COLUMNS = [
 ]
 
 export function TripDetailPage() {
-  const id = Number(useParams().id)
+  const id = useParams().id ?? ''
   const { data: trajet, isPending, isError, error, refetch } = useTrip(id)
 
   if (isPending) {

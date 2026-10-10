@@ -9,12 +9,12 @@ import { DescriptionList } from '@/components/ui/DescriptionList'
 import { QueryError } from '@/components/ui/QueryError'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { StatusBadge } from '@/components/ui/StatusBadge'
-import { formatDate, formatDateTime, formatFcfa, formatKm } from '@/utils/format'
+import { formatDate, formatDateTime, formatFcfa, formatKm, shortId } from '@/utils/format'
 import { useBooking } from '../api'
 import { StatusTimeline } from '../components/StatusTimeline'
 
 export function BookingDetailPage() {
-  const id = Number(useParams().id)
+  const id = useParams().id ?? ''
   const { data: res, isPending, isError, error, refetch } = useBooking(id)
 
   if (isPending) {
@@ -37,7 +37,7 @@ export function BookingDetailPage() {
       <BackLink to="/admin/bookings" label="Retour aux réservations" />
 
       <div className="flex flex-wrap items-center gap-3">
-        <h2 className="text-xl font-bold">Réservation #{res.id}</h2>
+        <h2 className="text-xl font-bold">Réservation #{shortId(res.id)}</h2>
         <StatusBadge domain="reservation" value={res.statut} />
       </div>
 

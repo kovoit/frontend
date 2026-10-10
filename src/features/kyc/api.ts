@@ -1,13 +1,13 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { api } from '@/api/client'
-import type { Paginated } from '@/api/types'
-import type { KycDossierDetail, KycDossierListItem, KycListFilters, PieceUrl } from './types'
+import { api, getBlob } from '@/api/client'
+import type { Id, Paginated } from '@/api/types'
+import type { KycDossierDetail, KycDossierListItem, KycListFilters } from './types'
 
 export const kycKeys = {
   all: ['kyc'] as const,
   list: (filters: KycListFilters) => ['kyc', 'list', filters] as const,
-  detail: (id: number) => ['kyc', 'detail', id] as const,
-  piece: (pieceId: number) => ['kyc', 'piece', pieceId] as const,
+  detail: (id: Id) => ['kyc', 'detail', id] as const,
+  piece: (pieceId: Id) => ['kyc', 'piece', pieceId] as const,
 }
 
 export function useKycList(filters: KycListFilters) {
@@ -18,7 +18,7 @@ export function useKycList(filters: KycListFilters) {
         params: {
           statut: filters.statut || undefined,
           type: filters.type || undefined,
-          search: filters.search || undefined,
+          recherche: filters.recherche || undefined,
           page: filters.page > 1 ? filters.page : undefined,
         },
       })
@@ -28,7 +28,7 @@ export function useKycList(filters: KycListFilters) {
   })
 }
 
-export function useKycDossier(id: number) {
+export function useKycDossier(id: Id) {
   return useQuery({
     queryKey: kycKeys.detail(id),
     queryFn: async () => {
@@ -39,16 +39,14 @@ export function useKycDossier(id: number) {
 }
 
 /**
- * URL signée d'une pièce KYC, demandée uniquement quand l'admin choisit de l'afficher.
- * Jamais mise en cache (chaque consultation est journalisée côté API).
+ * Fichier d'une pièce KYC, téléchargé uniquement quand l'admin choisit de l'afficher.
+ * Jamais mis en cache (chaque téléchargement est journalisé côté API) ; le composant
+ * l'affiche via une URL `blob:` locale qu'il révoque dès qu'il le masque.
  */
-export function usePieceUrl(pieceId: number, enabled: boolean) {
+export function usePieceFile(pieceId: Id, enabled: boolean) {
   return useQuery({
     queryKey: kycKeys.piece(pieceId),
-    queryFn: async () => {
-      const { data } = await api.get<PieceUrl>(`/admin/kyc/pieces/${pieceId}/url/`)
-      return data
-    },
+    queryFn: () => getBlob(`/admin/kyc/pieces/${pieceId}/fichier/`),
     enabled,
     gcTime: 0,
     staleTime: 0,
@@ -56,7 +54,7 @@ export function usePieceUrl(pieceId: number, enabled: boolean) {
   })
 }
 
-function useKycDecision<TPayload>(id: number, action: 'valider' | 'rejeter') {
+function useKycDecision<TPayload>(id: Id, action: 'valider' | 'rejeter') {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (payload: TPayload) => {
@@ -73,5 +71,5 @@ function useKycDecision<TPayload>(id: number, action: 'valider' | 'rejeter') {
   })
 }
 
-export const useValidateKyc = (id: number) => useKycDecision<Record<string, never>>(id, 'valider')
-export const useRejectKyc = (id: number) => useKycDecision<{ motif_rejet: string }>(id, 'rejeter')
+export const useValidateKyc = (id: Id) => useKycDecision<Record<string, never>>(id, 'valider')
+export const useRejectKyc = (id: Id) => useKycDecision<{ motif: string }>(id, 'rejeter')
