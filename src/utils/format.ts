@@ -2,6 +2,7 @@ const TIMEZONE = 'Africa/Lome'
 
 const fcfa = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 })
 const integer = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 })
+const decimal = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 })
 
 // Intl insère des espaces insécables (U+202F / U+00A0) : on les normalise en espace simple.
 const normalizeSpaces = (value: string) => value.replace(/[\u202F\u00A0]/g, ' ')
@@ -11,14 +12,26 @@ export function formatFcfa(amount: number): string {
   return `${normalizeSpaces(fcfa.format(amount))} FCFA`
 }
 
+/** 1.5 → "1,5" ; 4400 → "4 400" (2 décimales au plus) */
+export function formatDecimal(value: number): string {
+  return normalizeSpaces(decimal.format(value))
+}
+
 /** 4400 → "4 400" */
 export function formatNumber(value: number): string {
   return normalizeSpaces(integer.format(value))
 }
 
 /** 8.4 → "8,4 km" */
-export function formatKm(km: number): string {
+/** Distance par la route ; null (routage indisponible à la publication) → « — » */
+export function formatKm(km: number | null): string {
+  if (km === null) return '—'
   return `${normalizeSpaces(new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(km))} km`
+}
+
+/** UUID → référence courte lisible : « 3F2A9C1B » (8 premiers caractères) */
+export function shortId(id: string): string {
+  return id.slice(0, 8).toUpperCase()
 }
 
 /** 0.923 → "92 %" (ratio renvoyé par l'API, arrondi à l'unité) */

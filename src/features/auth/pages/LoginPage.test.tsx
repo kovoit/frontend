@@ -1,10 +1,11 @@
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { http, HttpResponse } from 'msw'
+import { http } from 'msw'
 import { describe, expect, it } from 'vitest'
 import { tokenStore } from '@/api/tokenStore'
 import { env } from '@/config/env'
 import { mockSession } from '@/mocks/db'
+import { fail } from '@/mocks/envelope'
 import { server } from '@/mocks/server'
 import { renderAt } from '@/test/renderWithRouter'
 
@@ -61,7 +62,9 @@ describe('connexion administrateur', () => {
 
   it('affiche un message clair en cas de trop nombreuses tentatives', async () => {
     server.use(
-      http.post(`${env.apiUrl}/auth/login/`, () => new HttpResponse(null, { status: 429 })),
+      http.post(`${env.apiUrl}/auth/admin/connexion/`, () =>
+        fail(429, 'Trop de tentatives. Réessayez dans quelques minutes.'),
+      ),
     )
     renderAt('/')
     await fillAndSubmit('admin@kovoit.tg', 'Admin123!')

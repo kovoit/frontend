@@ -25,7 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!token) return reset()
       try {
         const me = await fetchMe()
-        if (me.role !== 'admin') return reset()
+        if (!me.is_staff) return reset()
         setUser(me)
         setStatus('authenticated')
       } catch {
@@ -47,8 +47,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const login = useCallback(async (payload: LoginPayload) => {
-    const { access, user: loggedUser } = await loginRequest(payload)
-    if (loggedUser.role !== 'admin') {
+    const { access, utilisateur: loggedUser } = await loginRequest(payload)
+    // Le backend refuse déjà les non-admins (403) ; garde-fou si le contrat change.
+    if (!loggedUser.is_staff) {
       // Compte valide mais non admin : on ferme immédiatement la session ouverte côté serveur.
       tokenStore.set(access)
       await logoutRequest().catch(() => undefined)

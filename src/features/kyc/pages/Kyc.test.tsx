@@ -1,7 +1,11 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { http } from 'msw'
+import { describe, expect, it, vi } from 'vitest'
+import { env } from '@/config/env'
+import { fail } from '@/mocks/envelope'
 import { db, pieceConsultations } from '@/mocks/people'
+import { server } from '@/mocks/server'
 import { renderAt } from '@/test/renderWithRouter'
 
 const dossierOf = (userId: number, type: 'passager' | 'conducteur') =>
@@ -74,6 +78,35 @@ describe('détail d’un dossier KYC', () => {
     await userEvent.click(screen.getByRole('button', { name: "Afficher : Pièce d'identité" }))
     await screen.findByRole('img', { name: "Pièce d'identité de Afi Ahadji" })
     expect(pieceConsultations).toHaveLength(2)
+  })
+
+  it('libère le fichier en mémoire dès que la pièce est masquée', async () => {
+    const revoke = vi.spyOn(URL, 'revokeObjectURL')
+    const dossier = dossierOf(101, 'passager')
+    renderAt(`/admin/kyc/${dossier.id}`, { asAdmin: true })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Afficher : Selfie' }))
+    const image = await screen.findByRole('img', { name: 'Selfie de Afi Ahadji' })
+    const blobUrl = image.getAttribute('src')
+    expect(blobUrl).toMatch(/^blob:/)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Masquer : Selfie' }))
+    expect(revoke).toHaveBeenCalledWith(blobUrl)
+    expect(screen.queryByRole('img')).not.toBeInTheDocument()
+    revoke.mockRestore()
+  })
+
+  it("affiche le message du backend si la pièce n'est pas accessible", async () => {
+    server.use(
+      http.get(`${env.apiUrl}/admin/kyc/pieces/:id/fichier/`, () =>
+        fail(404, 'Pièce KYC introuvable.'),
+      ),
+    )
+    const dossier = dossierOf(101, 'passager')
+    renderAt(`/admin/kyc/${dossier.id}`, { asAdmin: true })
+
+    await userEvent.click(await screen.findByRole('button', { name: "Afficher : Pièce d'identité" }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Pièce KYC introuvable.')
   })
 
   it('affiche le véhicule déclaré pour un dossier conducteur', async () => {

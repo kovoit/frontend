@@ -10,7 +10,7 @@ export function useDashboardStats(periode: Periode) {
   return useQuery({
     queryKey: dashboardKeys.stats(periode),
     queryFn: async () => {
-      const { data } = await api.get<DashboardStats>('/admin/stats/', { params: { periode } })
+      const { data } = await api.get<DashboardStats>('/admin/tableau-de-bord/', { params: { periode } })
       return data
     },
     // Garde l'affichage précédent pendant le changement de période (pas de clignotement).

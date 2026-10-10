@@ -1,51 +1,63 @@
-import type { UserSummary, Vehicule } from '@/api/types'
+import type { Id, UserSummary, Vehicule } from '@/api/types'
 import type { CompteStatus, KycStatus, KycType } from '@/config/enums'
 
-// Contrat attendu de l'API (à implémenter côté backend DRF), réservé au rôle admin :
-//   GET  /admin/users/?search=&statut_compte=&page=   → Paginated<UserListItem>
-//        tri : cree_le décroissant ; search sur nom, prénom, email, téléphone
-//   GET  /admin/users/{id}/                           → UserDetail
-//   POST /admin/users/{id}/suspendre/ { motif, duree_jours: number | null }
-//        → { user: UserDetail, reservations_annulees: number }
-//        Effet PRD : réservations à venir annulées et remboursées, réservation et publication bloquées.
-//   POST /admin/users/{id}/reactiver/                 → UserDetail
+// Contrat de l'API (backend : apps/accounts/api/admin_views.py), réservé aux admins :
+//   GET  /admin/utilisateurs/?recherche=&statut=actif|suspendu&page=  → Paginated<UserListItem>
+//        tri : cree_le décroissant ; recherche sur nom, prénom, email, téléphone
+//   GET  /admin/utilisateurs/{id}/                → UserDetail
+//   POST /admin/utilisateurs/{id}/suspendre/ { motif (10 à 500 car.), jours: number | null }
+//        → { utilisateur: UserDetail, reservations_annulees } · 409 DEJA_SUSPENDU
+//        Effet PRD : engagements à venir annulés et remboursés, réservation et publication bloquées.
+//   POST /admin/utilisateurs/{id}/reactiver/      → UserDetail · 409 DEJA_ACTIF
+
+export type KycStatuts = { passager: KycStatus; conducteur: KycStatus }
 
 export type UserListItem = UserSummary & {
   statut_compte: CompteStatus
-  kyc_passager: KycStatus
-  kyc_conducteur: KycStatus
-  /** Taux de fiabilité sur 30 jours (0 à 1), calculé par l'API ; null si aucune réservation */
-  fiabilite: number | null
+  kyc: KycStatuts
+  /** Fiabilité sur la période (0 à 100), calculée par l'API ; null si aucune réservation */
+  fiabilite_pct: number | null
   cree_le: string
 }
 
-export type UserDetail = UserListItem & {
-  telephone_verifie_le: string | null
+export type UserDetail = UserSummary & {
+  statut_compte: CompteStatus
+  kyc: KycStatuts
+  cree_le: string
+  email_verifie: boolean
   mode_actif: 'passager' | 'conducteur'
+  is_staff: boolean
+  last_login: string | null
   suspendu_jusqu_au: string | null
-  motif_suspension: string | null
-  note_moyenne: number | null
-  nb_notes: number
-  /** Compteurs sur 30 jours glissants, base du taux de fiabilité */
-  fiabilite_detail: {
-    reservations_30j: number
-    annulations_tardives_30j: number
-    absences_30j: number
+  /** Chaîne vide si aucun motif */
+  motif_suspension: string
+  /** Compteurs sur `periode_j` jours glissants (paramètre periode_incidents_j) */
+  fiabilite: {
+    pct: number | null
+    periode_j: number
+    reservations: number
+    annulations_tardives: number
+    absences: number
   }
+  note_moyenne: number | null
+  nombre_notes: number
   vehicule: Vehicule | null
+  /** Dossiers déjà soumis au moins une fois */
   dossiers_kyc: Array<{
-    id: number
+    id: Id
     type: KycType
     statut: KycStatus
     soumis_le: string | null
     traite_le: string | null
-    motif_rejet: string | null
+    /** Chaîne vide si aucun rejet */
+    motif_rejet: string
   }>
   /** 5 dernières notes reçues */
   notes_recues: Array<{
-    id: number
+    id: Id
     note: number
-    commentaire: string | null
+    /** Chaîne vide si aucun commentaire */
+    commentaire: string
     auteur: { prenom: string; nom: string }
     cree_le: string
   }>
@@ -54,16 +66,16 @@ export type UserDetail = UserListItem & {
 export type SuspendPayload = {
   motif: string
   /** null = jusqu'à réactivation manuelle */
-  duree_jours: number | null
+  jours: number | null
 }
 
 export type SuspendResponse = {
-  user: UserDetail
+  utilisateur: UserDetail
   reservations_annulees: number
 }
 
 export type UserListFilters = {
-  search: string
-  statut_compte: string
+  recherche: string
+  statut: string
   page: number
 }

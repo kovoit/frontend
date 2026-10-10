@@ -1,8 +1,9 @@
-import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios'
+import axios, { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
 import { env } from '@/config/env'
+import type { ApiEnvelope, ApiFailure } from './types'
 import { tokenStore } from './tokenStore'
 
-export const REFRESH_PATH = '/auth/token/refresh/'
+export const REFRESH_PATH = '/auth/admin/jeton/rafraichir/'
 
 export const api = axios.create({
   baseURL: env.apiUrl,
@@ -16,16 +17,27 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+function isEnvelope(data: unknown): data is ApiEnvelope<unknown> {
+  return typeof data === 'object' && data !== null && 'statut' in data && 'reponse' in data
+}
+
+/**
+ * Le backend enveloppe toutes ses réponses : { statut, message, reponse }.
+ * On remplace `data` par `reponse` pour que les hooks reçoivent directement les données ;
+ * le message du backend reste disponible dans `apiMessage`.
+ */
+export function unwrapEnvelope<T>(response: AxiosResponse): AxiosResponse<T> & { apiMessage?: string } {
+  if (!isEnvelope(response.data)) return response
+  return Object.assign(response, { data: response.data.reponse as T, apiMessage: response.data.message })
+}
+
 let pendingRefresh: Promise<string | null> | null = null
 
 /** Demande un nouvel access token grâce au cookie de refresh. Renvoie null si la session est expirée. */
 export async function refreshAccessToken(): Promise<string | null> {
   try {
-    const { data } = await axios.post<{ access: string }>(
-      `${env.apiUrl}${REFRESH_PATH}`,
-      {},
-      { withCredentials: true },
-    )
+    const response = await axios.post(`${env.apiUrl}${REFRESH_PATH}`, {}, { withCredentials: true })
+    const { data } = unwrapEnvelope<{ access: string }>(response)
     tokenStore.set(data.access)
     return data.access
   } catch {
@@ -39,7 +51,7 @@ type RetriableConfig = InternalAxiosRequestConfig & { _retry?: boolean }
 
 // Sur 401 : un seul refresh partagé entre les requêtes concurrentes, puis rejeu de la requête.
 api.interceptors.response.use(
-  (response) => response,
+  (response) => unwrapEnvelope(response),
   async (error: AxiosError) => {
     const original = error.config as RetriableConfig | undefined
     // Les endpoints /auth/* (login, me, logout) gèrent eux-mêmes leurs 401 : pas de refresh.
@@ -58,35 +70,76 @@ api.interceptors.response.use(
   },
 )
 
+/**
+ * Télécharge un fichier protégé (ex. pièce KYC) avec le jeton de l'admin.
+ * En erreur, le corps reçu est un Blob : on le relit en JSON pour que toApiError retrouve
+ * le message et le code du backend.
+ */
+export async function getBlob(url: string): Promise<Blob> {
+  try {
+    const { data } = await api.get<Blob>(url, { responseType: 'blob' })
+    return data
+  } catch (error) {
+    const body: unknown = axios.isAxiosError(error) ? error.response?.data : null
+    if (axios.isAxiosError(error) && error.response && body instanceof Blob) {
+      try {
+        error.response.data = JSON.parse(await body.text())
+      } catch {
+        error.response.data = null
+      }
+    }
+    throw error
+  }
+}
+
 export type ApiError = {
   status: number | null
+  /** Code d'erreur métier du backend (ex. PLUS_DE_PLACE, DONNEES_INVALIDES), null si absent */
+  code: string | null
   message: string
   /** Erreurs de champ DRF : { champ: ["message"] } */
   fieldErrors: Record<string, string[]>
 }
 
-/** Normalise une erreur axios / DRF pour l'UI et react-hook-form. */
+/** Aplatit les erreurs de validation DRF (listes, objets imbriqués) en { champ: [messages] }. */
+function flattenFieldErrors(erreurs: ApiFailure['erreurs']): Record<string, string[]> {
+  const fieldErrors: Record<string, string[]> = {}
+  if (Array.isArray(erreurs)) {
+    if (erreurs.length) fieldErrors.non_field_errors = erreurs.map(String)
+    return fieldErrors
+  }
+  for (const [key, value] of Object.entries(erreurs ?? {})) {
+    if (Array.isArray(value)) fieldErrors[key] = value.map(String)
+    else if (typeof value === 'string') fieldErrors[key] = [value]
+    else if (value && typeof value === 'object') fieldErrors[key] = Object.values(value).flat().map(String)
+  }
+  return fieldErrors
+}
+
+/** Normalise une erreur axios (enveloppe `failed` du backend) pour l'UI et react-hook-form. */
 export function toApiError(error: unknown): ApiError {
   if (!axios.isAxiosError(error)) {
-    return { status: null, message: 'Une erreur inattendue est survenue.', fieldErrors: {} }
+    return { status: null, code: null, message: 'Une erreur inattendue est survenue.', fieldErrors: {} }
   }
   const status = error.response?.status ?? null
-  const data = error.response?.data as Record<string, unknown> | undefined
 
   if (!error.response) {
-    return { status, message: 'Serveur injoignable. Vérifiez votre connexion.', fieldErrors: {} }
+    return {
+      status,
+      code: null,
+      message: 'Serveur injoignable. Vérifiez votre connexion.',
+      fieldErrors: {},
+    }
   }
 
-  const fieldErrors: Record<string, string[]> = {}
-  let message = typeof data?.detail === 'string' ? data.detail : ''
-  if (data && typeof data === 'object') {
-    for (const [key, value] of Object.entries(data)) {
-      if (key === 'detail') continue
-      if (Array.isArray(value)) fieldErrors[key] = value.map(String)
-      else if (typeof value === 'string') fieldErrors[key] = [value]
-    }
-    const nonField = fieldErrors.non_field_errors?.[0]
-    if (!message && nonField) message = nonField
+  const data: unknown = error.response.data
+  const failure = isEnvelope(data) ? (data.reponse as ApiFailure | null) : null
+  const fieldErrors = flattenFieldErrors(failure?.erreurs ?? null)
+  const code = failure?.code ?? null
+  // Les erreurs de validation portent un message générique : on préfère le premier message utile.
+  let message = isEnvelope(data) ? data.message : ''
+  if (code === 'DONNEES_INVALIDES' && fieldErrors.non_field_errors?.[0]) {
+    message = fieldErrors.non_field_errors[0]
   }
 
   if (!message) {
@@ -101,5 +154,5 @@ export function toApiError(error: unknown): ApiError {
             ? 'Erreur du serveur. Réessayez plus tard.'
             : 'La requête a échoué.'
   }
-  return { status, message, fieldErrors }
+  return { status, code, message, fieldErrors }
 }

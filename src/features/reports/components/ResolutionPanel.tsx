@@ -22,7 +22,9 @@ const resolution = z
 
 const resolveSchema = z.object({ resolution })
 const arbitrateSchema = z.object({
-  decision: z.enum(['conducteur', 'passager'], { error: 'Choisissez en faveur de qui trancher.' }),
+  decision: z.enum(['crediter_conducteur', 'rembourser_passager'], {
+    error: 'Choisissez en faveur de qui trancher.',
+  }),
   resolution,
 })
 type ResolveForm = z.infer<typeof resolveSchema>
@@ -77,12 +79,12 @@ function ArbitrateDialog({ signalement, onClose }: { signalement: SignalementDet
   const { passager, conducteur, prix } = signalement.reservation
   const options = [
     {
-      value: 'conducteur' as const,
+      value: 'crediter_conducteur' as const,
       title: `En faveur du conducteur (${conducteur.prenom} ${conducteur.nom})`,
       detail: `Le trajet est dû : avec le portefeuille, les ${formatFcfa(prix)} gelés sont versés au conducteur.`,
     },
     {
-      value: 'passager' as const,
+      value: 'rembourser_passager' as const,
       title: `En faveur du passager (${passager.prenom} ${passager.nom})`,
       detail: `Avec le portefeuille, les ${formatFcfa(prix)} gelés sont remboursés au passager.`,
     },

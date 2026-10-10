@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { MdChevronRight, MdStar } from 'react-icons/md'
 import { Link, useParams } from 'react-router'
+import type { Id } from '@/api/types'
 import { toApiError } from '@/api/client'
 import { NotFoundPage } from '@/app/NotFoundPage'
 import { Alert } from '@/components/ui/Alert'
@@ -17,18 +18,16 @@ import { AccountActions } from '../components/AccountActions'
 import type { UserDetail } from '../types'
 
 function ReliabilityCard({ user }: { user: UserDetail }) {
-  const { reservations_30j, annulations_tardives_30j, absences_30j } = user.fiabilite_detail
+  const { pct, periode_j, reservations, annulations_tardives, absences } = user.fiabilite
   return (
     <Card className="gap-4 p-5">
-      <h2 className="text-lg font-bold">Fiabilité (30 jours)</h2>
-      <p className="text-3xl font-bold tabular-nums">
-        {user.fiabilite === null ? '—' : formatPercent(user.fiabilite)}
-      </p>
+      <h2 className="text-lg font-bold">Fiabilité ({periode_j} jours)</h2>
+      <p className="text-3xl font-bold tabular-nums">{pct === null ? '—' : formatPercent(pct / 100)}</p>
       <DescriptionList
         items={[
-          { label: 'Réservations', value: formatNumber(reservations_30j) },
-          { label: 'Annulations tardives', value: formatNumber(annulations_tardives_30j) },
-          { label: 'Absences', value: formatNumber(absences_30j) },
+          { label: 'Réservations', value: formatNumber(reservations) },
+          { label: 'Annulations tardives', value: formatNumber(annulations_tardives) },
+          { label: 'Absences', value: formatNumber(absences) },
           {
             label: 'Note moyenne',
             value:
@@ -38,24 +37,24 @@ function ReliabilityCard({ user }: { user: UserDetail }) {
                 <span className="inline-flex items-center gap-1">
                   {user.note_moyenne.toFixed(1).replace('.', ',')}
                   <MdStar aria-hidden className="h-4 w-4 text-accent-500" />
-                  <span className="text-muted">({formatNumber(user.nb_notes)} avis)</span>
+                  <span className="text-muted">({formatNumber(user.nombre_notes)} avis)</span>
                 </span>
               ),
           },
         ]}
       />
-      {user.fiabilite === null && (
-        <p className="text-xs text-muted">Aucune réservation sur les 30 derniers jours.</p>
+      {pct === null && (
+        <p className="text-xs text-muted">Aucune réservation sur les {periode_j} derniers jours.</p>
       )}
     </Card>
   )
 }
 
 export function UserDetailPage() {
-  const id = Number(useParams().id)
+  const id = useParams().id ?? ''
   const { data: user, isPending, isError, error, refetch } = useUser(id)
   // Message lié à la fiche affichée (évite de le montrer sur une autre fiche après navigation).
-  const [notice, setNotice] = useState<{ userId: number; text: string } | null>(null)
+  const [notice, setNotice] = useState<{ userId: Id; text: string } | null>(null)
 
   if (isPending) {
     return (
@@ -116,10 +115,7 @@ export function UserDetailPage() {
               items={[
                 { label: 'Email', value: user.email },
                 { label: 'Téléphone', value: user.telephone },
-                {
-                  label: 'Téléphone vérifié',
-                  value: user.telephone_verifie_le ? formatDateTime(user.telephone_verifie_le) : 'Non',
-                },
+                { label: 'Email vérifié', value: user.email_verifie ? 'Oui' : 'Non' },
                 { label: 'Inscrit le', value: formatDate(user.cree_le) },
                 {
                   label: 'Mode actif',

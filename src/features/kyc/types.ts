@@ -1,45 +1,43 @@
-import type { UserSummary, Vehicule } from '@/api/types'
+import type { Id, UserSummary, Vehicule } from '@/api/types'
 import type { KycStatus, KycType, PieceType } from '@/config/enums'
 
-// Contrat attendu de l'API (à implémenter côté backend DRF), réservé au rôle admin :
-//   GET  /admin/kyc/?statut=&type=&search=&page=   → Paginated<KycDossierListItem>
-//        tri : soumis_le croissant (les plus anciens d'abord) ; search sur nom, prénom, email, téléphone
-//   GET  /admin/kyc/{id}/                          → KycDossierDetail
-//   GET  /admin/kyc/pieces/{piece_id}/url/         → { url, expire_le }
-//        URL signée à durée courte ; CHAQUE appel est journalisé (table kyc_consultations)
-//   POST /admin/kyc/{id}/valider/                  → KycDossierDetail   (409 si statut ≠ en_attente)
-//   POST /admin/kyc/{id}/rejeter/ { motif_rejet }  → KycDossierDetail   (400 si motif vide)
+// Contrat de l'API (backend : apps/kyc/api/admin_views.py), réservé aux admins :
+//   GET  /admin/kyc/?statut=&type=&recherche=&page=  → Paginated<KycDossierDetail>
+//        tri : soumis_le croissant (les plus anciens d'abord) ; recherche sur nom, prénom, email, téléphone
+//   GET  /admin/kyc/{id}/                             → KycDossierDetail
+//   GET  /admin/kyc/pieces/{piece_id}/fichier/        → le fichier lui-même (image ou PDF)
+//        Cache-Control: no-store ; CHAQUE appel est journalisé (KycConsultation)
+//   POST /admin/kyc/{id}/valider/                     → KycDossierDetail (409 DOSSIER_NON_EN_ATTENTE)
+//   POST /admin/kyc/{id}/rejeter/ { motif }           → KycDossierDetail (motif : 10 à 500 car.)
 
 export type KycDossierListItem = {
-  id: number
+  id: Id
   type: KycType
   statut: KycStatus
   soumis_le: string | null
   traite_le: string | null
-  user: UserSummary
+  utilisateur: UserSummary
 }
 
 export type KycPiece = {
-  id: number
+  id: Id
   type_piece: PieceType
+  cree_le: string
 }
 
 export type KycDossierDetail = KycDossierListItem & {
-  motif_rejet: string | null
-  traite_par: { id: number; nom: string; prenom: string } | null
+  /** Chaîne vide si aucun rejet */
+  motif_rejet: string
+  traite_par: { id: Id; nom: string; prenom: string } | null
   pieces: KycPiece[]
+  pieces_manquantes: string[]
   /** Véhicule déclaré (dossier conducteur uniquement) */
   vehicule: Vehicule | null
-}
-
-export type PieceUrl = {
-  url: string
-  expire_le: string
 }
 
 export type KycListFilters = {
   statut: string
   type: string
-  search: string
+  recherche: string
   page: number
 }

@@ -39,24 +39,24 @@ const COLUMNS: Column<UserListItem>[] = [
   {
     id: 'kyc_passager',
     header: 'KYC passager',
-    cell: (user) => <StatusBadge domain="kyc" value={user.kyc_passager} />,
+    cell: (user) => <StatusBadge domain="kyc" value={user.kyc.passager} />,
   },
   {
     id: 'kyc_conducteur',
     header: 'KYC conducteur',
-    cell: (user) => <StatusBadge domain="kyc" value={user.kyc_conducteur} />,
+    cell: (user) => <StatusBadge domain="kyc" value={user.kyc.conducteur} />,
   },
   {
     id: 'fiabilite',
     header: 'Fiabilité',
     className: 'text-right tabular-nums',
     cell: (user) =>
-      user.fiabilite === null ? (
-        <span className="text-muted" title="Aucune réservation sur 30 jours">
+      user.fiabilite_pct === null ? (
+        <span className="text-muted" title="Aucune réservation sur la période">
           —
         </span>
       ) : (
-        formatPercent(user.fiabilite)
+        formatPercent(user.fiabilite_pct / 100)
       ),
   },
   {
@@ -79,7 +79,7 @@ export function UsersListPage() {
     : ''
 
   const filters = useMemo(
-    () => ({ search: values.q, statut_compte: statut, page }),
+    () => ({ recherche: values.q, statut, page }),
     [values.q, statut, page],
   )
   const { data, isPending, isError, error, refetch, isFetching } = useUserList(filters)

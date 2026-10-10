@@ -37,13 +37,13 @@ const COLUMNS: Column<KycDossierListItem>[] = [
     cell: (dossier) => (
       <div className="min-w-0">
         <p className="font-semibold">
-          {dossier.user.prenom} {dossier.user.nom}
+          {dossier.utilisateur.prenom} {dossier.utilisateur.nom}
         </p>
-        <p className="truncate text-xs text-muted">{dossier.user.email}</p>
+        <p className="truncate text-xs text-muted">{dossier.utilisateur.email}</p>
       </div>
     ),
   },
-  { id: 'telephone', header: 'Téléphone', cell: (dossier) => dossier.user.telephone, className: 'whitespace-nowrap' },
+  { id: 'telephone', header: 'Téléphone', cell: (dossier) => dossier.utilisateur.telephone, className: 'whitespace-nowrap' },
   { id: 'type', header: 'Type', cell: (dossier) => KYC_TYPE[dossier.type] },
   {
     id: 'soumis',
@@ -60,7 +60,7 @@ const COLUMNS: Column<KycDossierListItem>[] = [
       <Link
         to={`/admin/kyc/${dossier.id}`}
         className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-semibold text-brand-700 hover:bg-brand-50 dark:text-brand-200 dark:hover:bg-white/10"
-        aria-label={`${dossier.statut === 'en_attente' ? 'Examiner' : 'Voir'} le dossier de ${dossier.user.prenom} ${dossier.user.nom}`}
+        aria-label={`${dossier.statut === 'en_attente' ? 'Examiner' : 'Voir'} le dossier de ${dossier.utilisateur.prenom} ${dossier.utilisateur.nom}`}
       >
         {dossier.statut === 'en_attente' ? 'Examiner' : 'Voir'}
         <MdChevronRight aria-hidden className="h-4 w-4" />
@@ -79,7 +79,7 @@ export function KycListPage() {
     () => ({
       statut: statut === 'tous' ? '' : statut,
       type: values.type,
-      search: values.q,
+      recherche: values.q,
       page,
     }),
     [statut, values.type, values.q, page],

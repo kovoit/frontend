@@ -5,46 +5,46 @@ type MockAccount = AuthUser & { password: string }
 
 export const MOCK_ACCOUNTS: MockAccount[] = [
   {
-    id: 1,
+    id: '1',
     email: 'admin@kovoit.tg',
     password: 'Admin123!',
     nom: 'Kovoit',
     prenom: 'Admin',
-    role: 'admin',
+    is_staff: true,
   },
   {
-    id: 2,
+    id: '2',
     email: 'conducteur@kovoit.tg',
     password: 'Passe123!',
     nom: 'Mensah',
     prenom: 'Kodjo',
-    role: 'utilisateur',
+    is_staff: false,
   },
 ]
 
-export const toPublicUser = ({ id, email, nom, prenom, role }: MockAccount): AuthUser => ({
+export const toPublicUser = ({ id, email, nom, prenom, is_staff }: MockAccount): AuthUser => ({
   id,
   email,
   nom,
   prenom,
-  role,
+  is_staff,
 })
 
 // Simule le cookie httpOnly de refresh : conservé en sessionStorage pour survivre au rechargement.
 const SESSION_KEY = 'kovoit-mock-session'
 
 export const mockSession = {
-  userId(): number | null {
+  userId(): string | null {
     try {
       const value = sessionStorage.getItem(SESSION_KEY)
-      return value ? Number(value) : null
+      return value || null
     } catch {
       return null
     }
   },
-  start(userId: number) {
+  start(userId: string) {
     try {
-      sessionStorage.setItem(SESSION_KEY, String(userId))
+      sessionStorage.setItem(SESSION_KEY, userId)
     } catch {
       // stockage indisponible : session non persistée
     }
@@ -58,9 +58,9 @@ export const mockSession = {
   },
 }
 
-export const accessTokenFor = (userId: number) => `mock-access-${userId}`
+export const accessTokenFor = (userId: string) => `mock-access-${userId}`
 
 export function userFromAuthHeader(header: string | null): MockAccount | undefined {
-  const id = Number(header?.replace('Bearer mock-access-', ''))
+  const id = header?.replace('Bearer mock-access-', '')
   return MOCK_ACCOUNTS.find((account) => account.id === id)
 }

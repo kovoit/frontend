@@ -1,7 +1,9 @@
 import type { ReservationStatus } from '@/config/enums'
 
-// Contrat attendu de l'API (à implémenter côté backend DRF) :
-//   GET /admin/stats/?periode=7j|30j|mois → 200 DashboardStats
+// Contrat de l'API (backend : apps/dashboard/services/tableau_de_bord.py) :
+//   GET /admin/tableau-de-bord/?periode=7j|30j|mois (défaut 30j) → DashboardStats | 400 si période invalide
+//   Période : du 1er jour à minuit (Lomé) jusqu'à maintenant. Trajets terminés et passagers sont
+//   comptés par date de départ du trajet ; réservations par statut : créées sur la période.
 // Tous les agrégats sont calculés par le backend ; le front ne fait que les afficher.
 
 export const PERIODES = {
