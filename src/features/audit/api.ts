@@ -18,7 +18,7 @@ export const auditKeys = {
 }
 
 /** Lomé est en UTC toute l'année : les bornes de dates sont exprimées en UTC. */
-function toParams(filters: Partial<AuditFilters>) {
+export function auditParams(filters: Partial<AuditFilters>) {
   const params: Record<string, string> = {}
   for (const [key, value] of Object.entries(filters)) {
     if (!value) continue
@@ -34,7 +34,7 @@ export function useAuditEvents(filters: Partial<AuditFilters>, page = 1, enabled
     queryKey: ['audit', 'list', filters, page],
     queryFn: async () => {
       const { data } = await api.get<Paginated<AuditEvent>>('/admin/audit/evenements/', {
-        params: { ...toParams(filters), page: page > 1 ? page : undefined },
+        params: { ...auditParams(filters), page: page > 1 ? page : undefined },
       })
       return data
     },
@@ -89,7 +89,7 @@ export function useAuditLive(
       const previous = queryClient.getQueryData<LiveData>(key) ?? { events: [], tronque: false }
       const depuis = previous.events[0]?.enregistre_le ?? newestKnown
       const { data } = await api.get<AuditFlux>('/admin/audit/flux/', {
-        params: { ...toParams(filters), depuis },
+        params: { ...auditParams(filters), depuis },
       })
       const seen = new Set(previous.events.map((event) => event.id))
       const fresh = data.evenements.filter((event) => !seen.has(event.id)).reverse()

@@ -1,6 +1,6 @@
 import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { http } from 'msw'
+import { http, HttpResponse } from 'msw'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { env } from '@/config/env'
 import { fail, ok } from '@/mocks/envelope'
@@ -157,6 +157,26 @@ describe('journal d’audit', () => {
     expect(router.state.location.search).toBe('?categorie=securite')
     await vi.waitFor(() => expect(listes).toContain('securite'))
     await vi.waitFor(() => expect(directs).toContain('securite'))
+  })
+
+  it('exporte en CSV avec les filtres en cours', async () => {
+    const exports: string[] = []
+    server.use(
+      http.get(`${BASE}/evenements/`, () => page([evenement('e1')])),
+      http.get(`${BASE}/export/`, ({ request }) => {
+        exports.push(new URL(request.url).search)
+        return new HttpResponse('enregistre_le;action', {
+          headers: { 'Content-Type': 'text/csv' },
+        })
+      }),
+    )
+    renderAt('/admin/audit?categorie=securite', { asAdmin: true })
+    await screen.findByRole('table', { name: 'Journal d’audit' })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Exporter (CSV)' }))
+
+    await vi.waitFor(() => expect(exports).toEqual(['?categorie=securite']))
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
   it('affiche le détail sans inventer l’acteur d’un compte supprimé', async () => {

@@ -10,6 +10,7 @@ import { liveStart, useAuditEvents, useAuditLive, useAuditStats } from '../api'
 import { AuditFiltersBar } from '../components/AuditFiltersBar'
 import { AuditStatsGrid } from '../components/AuditStatsGrid'
 import { AuditTable } from '../components/AuditTable'
+import { ExportButton } from '../components/ExportButton'
 import { LiveIndicator, type LiveState } from '../components/LiveIndicator'
 import { AUDIT_FILTER_KEYS, AUDIT_PERIODES, type AuditFilters, type AuditPeriode } from '../types'
 
@@ -97,6 +98,9 @@ export function AuditPage() {
           />
         </div>
         <AuditFiltersBar filters={filters} onChange={setFilters} />
+        <div className="flex justify-end">
+          <ExportButton filters={filters} />
+        </div>
 
         {live.data?.tronque && (
           <Alert tone="warning">
