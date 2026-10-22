@@ -35,7 +35,7 @@ npm run lint       # ESLint
 npm run format     # Prettier
 ```
 
-Variables d'environnement (`.env.local`, jamais commité ; modèle dans `.env.example`) : `VITE_API_URL`, `VITE_USE_MOCKS` (`true` = MSW), `VITE_FEATURE_WALLET` (`true` = écran Transactions, option portefeuille).
+Variables d'environnement (`.env.local`, jamais commité ; modèle dans `.env.example`) : `VITE_API_URL`, `VITE_USE_MOCKS` (`true` = MSW, `npm run dev` uniquement, ignoré au build, bandeau « données simulées » affiché), `VITE_FEATURE_WALLET` (`true` = écran Transactions, option portefeuille).
 
 ## 3. Arborescence
 

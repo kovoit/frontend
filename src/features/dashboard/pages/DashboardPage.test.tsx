@@ -15,6 +15,7 @@ function fixedStats(overrides: Partial<DashboardStats> = {}): DashboardStats {
   const stats = buildMockStats('30j', new Date('2026-10-08T12:00:00Z'))
   return {
     ...stats,
+    donnees_demo: false,
     indicateurs: {
       trajets_publies: 1240,
       trajets_termines: 1102,
@@ -35,10 +36,71 @@ describe('tableau de bord', () => {
 
     const kpis = await screen.findByRole('region', { name: 'Indicateurs clés' })
     expect(within(kpis).getByText('1 102')).toBeVisible()
-    expect(within(kpis).getByText('sur 1 240 publiés')).toBeVisible()
+    expect(within(kpis).getByText('1 240 publiés sur la période')).toBeVisible()
     expect(within(kpis).getByText('2 087')).toBeVisible()
     expect(within(kpis).getByText('605 230 FCFA')).toBeVisible()
-    expect(within(kpis).getByText('dont 87 conducteurs')).toBeVisible()
+    expect(within(kpis).getByText('À ce jour, dont 87 conducteurs')).toBeVisible()
+    expect(screen.queryByText(/comptes de démonstration/)).not.toBeInTheDocument()
+  })
+
+  it('prévient quand la base contient des comptes de démonstration', async () => {
+    server.use(http.get(STATS_URL, () => ok(fixedStats({ donnees_demo: true }))))
+    renderAt('/admin', { asAdmin: true })
+
+    expect(await screen.findByText(/comptes de démonstration/)).toBeVisible()
+  })
+
+  it('distingue une période sans activité (zéros réels) d’une erreur', async () => {
+    const vide = fixedStats()
+    server.use(
+      http.get(STATS_URL, () =>
+        ok({
+          ...vide,
+          indicateurs: { ...vide.indicateurs, trajets_termines: 0, passagers_transportes: 0 },
+          evolution: vide.evolution.map((point) => ({ ...point, trajets: 0, passagers: 0 })),
+          reservations_par_statut: Object.fromEntries(
+            Object.keys(vide.reservations_par_statut).map((statut) => [statut, 0]),
+          ) as DashboardStats['reservations_par_statut'],
+        }),
+      ),
+    )
+    renderAt('/admin', { asAdmin: true })
+
+    expect(await screen.findByText('Aucun trajet terminé sur cette période.')).toBeVisible()
+    expect(screen.getByText('Aucune réservation créée sur cette période.')).toBeVisible()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('chart-line')).not.toBeInTheDocument()
+  })
+
+  it('n’affiche pas les chiffres de l’ancienne période si la nouvelle échoue', async () => {
+    server.use(
+      http.get(STATS_URL, ({ request }) =>
+        new URL(request.url).searchParams.get('periode') === '7j'
+          ? fail(500, 'Une erreur interne est survenue. Réessayez plus tard.', 'ERREUR_INTERNE')
+          : ok(fixedStats()),
+      ),
+    )
+    renderAt('/admin', { asAdmin: true })
+    await screen.findByRole('region', { name: 'Indicateurs clés' })
+
+    await userEvent.click(screen.getByRole('button', { name: '7 derniers jours' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Impossible de charger')
+    expect(screen.queryByRole('region', { name: 'Indicateurs clés' })).not.toBeInTheDocument()
+    expect(screen.queryByText('1 102')).not.toBeInTheDocument()
+  })
+
+  it('affiche « Accès refusé » sur un 403', async () => {
+    server.use(
+      http.get(STATS_URL, () =>
+        fail(403, "Vous n'avez pas la permission d'effectuer cette action.", 'PERMISSION_REFUSEE'),
+      ),
+    )
+    renderAt('/admin', { asAdmin: true })
+
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('Accès refusé')
+    expect(screen.queryByRole('region', { name: 'Indicateurs clés' })).not.toBeInTheDocument()
   })
 
   it('relie chaque file de travail à la liste filtrée', async () => {
@@ -107,7 +169,7 @@ describe('tableau de bord', () => {
     renderAt('/admin', { asAdmin: true })
 
     const alert = await screen.findByRole('alert')
-    expect(alert).toHaveTextContent('Impossible de charger les données')
+    expect(alert).toHaveTextContent('Impossible de charger le tableau de bord')
     expect(alert).toHaveTextContent('Une erreur interne est survenue')
 
     await userEvent.click(within(alert).getByRole('button', { name: 'Réessayer' }))

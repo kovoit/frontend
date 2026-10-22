@@ -49,6 +49,7 @@ export function buildMockStats(periode: Periode, today = new Date()): DashboardS
 
   return {
     periode: { code: periode, debut: evolution[0]!.date, fin: evolution.at(-1)!.date },
+    donnees_demo: true,
     indicateurs: {
       trajets_publies: Math.round(trajetsTermines * 1.12),
       trajets_termines: trajetsTermines,

@@ -12,24 +12,26 @@ export function KpiGrid({ indicateurs }: { indicateurs: DashboardStats['indicate
         icon={<MdDirectionsCar className={icon} />}
         title="Trajets terminés"
         value={formatNumber(indicateurs.trajets_termines)}
-        hint={`sur ${formatNumber(indicateurs.trajets_publies)} publiés`}
+        // Terminés : par date de départ ; publiés : par date de publication (pas un ratio).
+        hint={`${formatNumber(indicateurs.trajets_publies)} publiés sur la période`}
       />
       <Widget
         icon={<MdGroups className={icon} />}
         title="Passagers transportés"
         value={formatNumber(indicateurs.passagers_transportes)}
+        hint="Montés à bord, trajet terminé"
       />
       <Widget
         icon={<MdSavings className={icon} />}
         title="Économies réalisées"
         value={formatFcfa(indicateurs.economies_realisees)}
-        hint="Partagées par les passagers avec les conducteurs"
+        hint="Versées aux conducteurs sur la période"
       />
       <Widget
         icon={<MdVerifiedUser className={icon} />}
         title="Utilisateurs vérifiés"
         value={formatNumber(indicateurs.utilisateurs_verifies)}
-        hint={`dont ${formatNumber(indicateurs.conducteurs_verifies)} conducteurs`}
+        hint={`À ce jour, dont ${formatNumber(indicateurs.conducteurs_verifies)} conducteurs`}
       />
     </section>
   )

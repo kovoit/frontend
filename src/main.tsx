@@ -5,7 +5,8 @@ import { env } from '@/config/env'
 import './index.css'
 
 async function enableMocks() {
-  if (!env.useMocks) return
+  // import.meta.env.DEV est remplacé par false au build : MSW est retiré du bundle de production.
+  if (!import.meta.env.DEV || !env.useMocks) return
   const { worker } = await import('@/mocks/browser')
   await worker.start({ onUnhandledRequest: 'bypass' })
 }
