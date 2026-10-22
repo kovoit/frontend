@@ -12,11 +12,14 @@ const adminPages: RouteObject[] = [
   {
     index: true,
     lazy: () =>
-      import('@/features/dashboard/pages/DashboardPage').then((m) => ({ Component: m.DashboardPage })),
+      import('@/features/dashboard/pages/DashboardPage').then((m) => ({
+        Component: m.DashboardPage,
+      })),
   },
   {
     path: 'kyc',
-    lazy: () => import('@/features/kyc/pages/KycListPage').then((m) => ({ Component: m.KycListPage })),
+    lazy: () =>
+      import('@/features/kyc/pages/KycListPage').then((m) => ({ Component: m.KycListPage })),
   },
   {
     path: 'kyc/:id',
@@ -31,7 +34,9 @@ const adminPages: RouteObject[] = [
   {
     path: 'users/:id',
     lazy: () =>
-      import('@/features/users/pages/UserDetailPage').then((m) => ({ Component: m.UserDetailPage })),
+      import('@/features/users/pages/UserDetailPage').then((m) => ({
+        Component: m.UserDetailPage,
+      })),
   },
   {
     path: 'trips',
@@ -41,7 +46,9 @@ const adminPages: RouteObject[] = [
   {
     path: 'trips/:id',
     lazy: () =>
-      import('@/features/trips/pages/TripDetailPage').then((m) => ({ Component: m.TripDetailPage })),
+      import('@/features/trips/pages/TripDetailPage').then((m) => ({
+        Component: m.TripDetailPage,
+      })),
   },
   {
     path: 'bookings',
@@ -69,6 +76,18 @@ const adminPages: RouteObject[] = [
     lazy: () =>
       import('@/features/reports/pages/ReportDetailPage').then((m) => ({
         Component: m.ReportDetailPage,
+      })),
+  },
+  {
+    path: 'audit',
+    lazy: () =>
+      import('@/features/audit/pages/AuditPage').then((m) => ({ Component: m.AuditPage })),
+  },
+  {
+    path: 'audit/:id',
+    lazy: () =>
+      import('@/features/audit/pages/AuditEventPage').then((m) => ({
+        Component: m.AuditEventPage,
       })),
   },
   ...(env.featureWallet

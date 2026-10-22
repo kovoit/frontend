@@ -2,6 +2,7 @@ import type { ApexOptions } from 'apexcharts'
 import { lazy, Suspense } from 'react'
 import { baseChartOptions, seriesColors } from '@/components/charts/chartTheme'
 import { ChartDataTable } from '@/components/charts/ChartDataTable'
+import { EmptyChart } from '@/components/charts/EmptyChart'
 import { Card } from '@/components/ui/Card'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { RESERVATION_STATUS, type ReservationStatus } from '@/config/enums'
@@ -60,14 +61,18 @@ export function StatusChart({ parStatut }: StatusChartProps) {
       <h2 className="text-lg font-bold">Réservations par statut</h2>
       <p className="text-sm text-muted">Réservations créées sur la période, statut actuel</p>
       <div className="mt-2 h-[300px]">
-        <Suspense fallback={<Skeleton className="h-full w-full" />}>
-          <Chart
-            type="bar"
-            height={300}
-            options={options}
-            series={[{ name: 'Réservations', data: values }]}
-          />
-        </Suspense>
+        {values.every((value) => value === 0) ? (
+          <EmptyChart>Aucune réservation créée sur cette période.</EmptyChart>
+        ) : (
+          <Suspense fallback={<Skeleton className="h-full w-full" />}>
+            <Chart
+              type="bar"
+              height={300}
+              options={options}
+              series={[{ name: 'Réservations', data: values }]}
+            />
+          </Suspense>
+        )}
       </div>
       <ChartDataTable
         caption="Réservations par statut"

@@ -2,6 +2,7 @@ import type { ApexOptions } from 'apexcharts'
 import { lazy, Suspense } from 'react'
 import { axisLabelStyle, baseChartOptions, seriesColors } from '@/components/charts/chartTheme'
 import { ChartDataTable } from '@/components/charts/ChartDataTable'
+import { EmptyChart } from '@/components/charts/EmptyChart'
 import { Card } from '@/components/ui/Card'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useIsDark } from '@/hooks/useIsDark'
@@ -51,9 +52,13 @@ export function EvolutionChart({ evolution }: EvolutionChartProps) {
       <h2 className="text-lg font-bold">Activité quotidienne</h2>
       <p className="text-sm text-muted">Trajets terminés et passagers transportés par jour</p>
       <div className="mt-2 h-[300px]">
-        <Suspense fallback={<Skeleton className="h-full w-full" />}>
-          <Chart type="line" height={300} options={options} series={series} />
-        </Suspense>
+        {evolution.every((point) => point.trajets === 0 && point.passagers === 0) ? (
+          <EmptyChart>Aucun trajet terminé sur cette période.</EmptyChart>
+        ) : (
+          <Suspense fallback={<Skeleton className="h-full w-full" />}>
+            <Chart type="line" height={300} options={options} series={series} />
+          </Suspense>
+        )}
       </div>
       <ChartDataTable
         caption="Activité quotidienne : trajets terminés et passagers transportés"

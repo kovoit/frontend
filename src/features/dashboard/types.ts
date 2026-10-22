@@ -16,6 +16,8 @@ export type Periode = keyof typeof PERIODES
 
 export type DashboardStats = {
   periode: { code: Periode; debut: string; fin: string }
+  /** Vrai si la base contient des comptes de démo (seed_demo, seed_backoffice) */
+  donnees_demo: boolean
   indicateurs: {
     trajets_publies: number
     trajets_termines: number

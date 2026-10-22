@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { UserActivityCard } from '@/features/audit/components/UserActivityCard'
 import { MdChevronRight, MdStar } from 'react-icons/md'
 import { Link, useParams } from 'react-router'
 import type { Id } from '@/api/types'
@@ -22,7 +23,9 @@ function ReliabilityCard({ user }: { user: UserDetail }) {
   return (
     <Card className="gap-4 p-5">
       <h2 className="text-lg font-bold">Fiabilité ({periode_j} jours)</h2>
-      <p className="text-3xl font-bold tabular-nums">{pct === null ? '—' : formatPercent(pct / 100)}</p>
+      <p className="text-3xl font-bold tabular-nums">
+        {pct === null ? '—' : formatPercent(pct / 100)}
+      </p>
       <DescriptionList
         items={[
           { label: 'Réservations', value: formatNumber(reservations) },
@@ -168,7 +171,9 @@ export function UserDetailPage() {
                         <span className="text-muted">· {formatDate(note.cree_le)}</span>
                       </span>
                     </div>
-                    {note.commentaire && <p className="mt-1 text-sm text-muted">{note.commentaire}</p>}
+                    {note.commentaire && (
+                      <p className="mt-1 text-sm text-muted">{note.commentaire}</p>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -178,6 +183,7 @@ export function UserDetailPage() {
 
         <div className="flex flex-col gap-5">
           <ReliabilityCard user={user} />
+          <UserActivityCard userId={user.id} />
           <Card className="gap-4 p-5">
             <h2 className="text-lg font-bold">Véhicule</h2>
             {user.vehicule ? (

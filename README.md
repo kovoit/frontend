@@ -8,7 +8,7 @@ React 19 · TypeScript · Vite · Tailwind CSS 3 (template Horizon UI, charte Na
 
 ```bash
 npm install
-cp .env.example .env.local   # VITE_USE_MOCKS=true pour travailler sans backend
+cp .env.example .env.local   # VITE_USE_MOCKS=true pour travailler sans backend (dev uniquement)
 npm run dev
 ```
 

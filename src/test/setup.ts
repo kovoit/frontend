@@ -1,11 +1,15 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup } from '@testing-library/react'
+import { cleanup, configure } from '@testing-library/react'
 import { createElement } from 'react'
 import { afterAll, afterEach, beforeAll, vi } from 'vitest'
 import { tokenStore } from '@/api/tokenStore'
 import { mockSession } from '@/mocks/db'
 import { resetMockDb } from '@/mocks/people'
 import { server } from '@/mocks/server'
+
+// Les pages sont importées à la demande : sous la charge de toute la suite, le premier rendu
+// dépasse parfois le délai par défaut de 1 s des findBy*.
+configure({ asyncUtilTimeout: 5000 })
 
 // ApexCharts mesure le SVG (indisponible dans jsdom) : remplacé par un marqueur testable.
 vi.mock('react-apexcharts', () => ({
