@@ -41,12 +41,50 @@ export const SIGNALEMENT_STATUS = {
   traite: { label: 'Traité', tone: 'success' },
 } as const satisfies Record<string, StatusMeta>
 
+// Journal d'audit (backend : apps/audit/models.py)
+export const AUDIT_RESULTAT = {
+  succes: { label: 'Réussi', tone: 'success' },
+  refus: { label: 'Refusé', tone: 'warning' },
+  echec: { label: 'Échec technique', tone: 'danger' },
+} as const satisfies Record<string, StatusMeta>
+
+export const AUDIT_CATEGORIE = {
+  metier: { label: 'Métier', tone: 'info' },
+  admin: { label: 'Administration', tone: 'neutral' },
+  securite: { label: 'Sécurité', tone: 'warning' },
+  technique: { label: 'Technique', tone: 'danger' },
+} as const satisfies Record<string, StatusMeta>
+
+export const AUDIT_GRAVITE = {
+  info: { label: 'Information', tone: 'neutral' },
+  avertissement: { label: 'Avertissement', tone: 'warning' },
+  critique: { label: 'Critique', tone: 'danger' },
+} as const satisfies Record<string, StatusMeta>
+
+export const AUDIT_CANAL = {
+  web: 'Web (back-office)',
+  mobile: 'Application mobile',
+  api: 'API (canal non identifié)',
+  systeme: 'Système',
+} as const
+
+export const AUDIT_ROLE = {
+  passager: 'Passager',
+  conducteur: 'Conducteur',
+  admin: 'Administrateur',
+  systeme: 'Système',
+  anonyme: 'Non connecté',
+} as const
+
 export const STATUS_DOMAINS = {
   reservation: RESERVATION_STATUS,
   trajet: TRAJET_STATUS,
   kyc: KYC_STATUS,
   compte: COMPTE_STATUS,
   signalement: SIGNALEMENT_STATUS,
+  auditResultat: AUDIT_RESULTAT,
+  auditCategorie: AUDIT_CATEGORIE,
+  auditGravite: AUDIT_GRAVITE,
 } as const
 
 export type StatusDomain = keyof typeof STATUS_DOMAINS

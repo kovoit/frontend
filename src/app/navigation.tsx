@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import {
   MdDashboard,
   MdDirectionsCar,
+  MdManageSearch,
   MdEventSeat,
   MdPeople,
   MdReceiptLong,
@@ -40,6 +41,11 @@ export const NAV_ITEMS: NavItem[] = [
         },
       ]
     : []),
+  {
+    label: 'Audit et activités',
+    to: '/admin/audit',
+    icon: <MdManageSearch className={iconClass} />,
+  },
   { label: 'Paramètres', to: '/admin/settings', icon: <MdSettings className={iconClass} /> },
 ]
 

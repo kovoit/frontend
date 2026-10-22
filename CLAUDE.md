@@ -58,7 +58,8 @@ src/
 │   ├── bookings/       # réservations, timeline des statuts
 │   ├── reports/        # signalements & litiges, arbitrage
 │   ├── transactions/   # journal (uniquement si portefeuille retenu)
-│   └── settings/       # paramètres administrateur
+│   ├── settings/       # paramètres administrateur
+│   └── audit/          # journal d'audit : indicateurs, fil d'activité en direct (flux interrogé toutes les 5 s), détail, activité d'un utilisateur
 ├── hooks/  utils/  # formatage FCFA, dates (Africa/Lome), helpers
 ├── mocks/          # handlers MSW (navigateur + Node pour les tests)
 ├── test/           # setup Vitest, helpers de rendu (renderAt)

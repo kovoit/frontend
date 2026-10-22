@@ -4,6 +4,7 @@ import { fail, invalid, ok } from './envelope'
 import { PERIODES, type Periode } from '@/features/dashboard/types'
 import { activityHandlers } from './activityHandlers'
 import { adminHandlers } from './adminHandlers'
+import { auditHandlers } from './auditHandlers'
 import { settingsHandlers } from './settingsHandlers'
 import { buildMockStats } from './dashboard'
 import { accessTokenFor, MOCK_ACCOUNTS, mockSession, toPublicUser, userFromAuthHeader } from './db'
@@ -74,4 +75,5 @@ export const handlers = [
   ...adminHandlers,
   ...activityHandlers,
   ...settingsHandlers,
+  ...auditHandlers,
 ]
