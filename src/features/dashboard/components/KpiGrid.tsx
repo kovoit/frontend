@@ -1,4 +1,4 @@
-import { MdDirectionsCar, MdGroups, MdSavings, MdVerifiedUser } from 'react-icons/md'
+import { MdDirectionsCar, MdGroups, MdPercent, MdSavings, MdVerifiedUser } from 'react-icons/md'
 import { Widget } from '@/components/ui/Widget'
 import { formatFcfa, formatNumber } from '@/utils/format'
 import type { DashboardStats } from '../types'
@@ -7,7 +7,10 @@ const icon = 'h-6 w-6'
 
 export function KpiGrid({ indicateurs }: { indicateurs: DashboardStats['indicateurs'] }) {
   return (
-    <section aria-label="Indicateurs clés" className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
+    <section
+      aria-label="Indicateurs clés"
+      className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5"
+    >
       <Widget
         icon={<MdDirectionsCar className={icon} />}
         title="Trajets terminés"
@@ -25,7 +28,13 @@ export function KpiGrid({ indicateurs }: { indicateurs: DashboardStats['indicate
         icon={<MdSavings className={icon} />}
         title="Économies réalisées"
         value={formatFcfa(indicateurs.economies_realisees)}
-        hint="Versées aux conducteurs sur la période"
+        hint="Net versé aux conducteurs sur la période"
+      />
+      <Widget
+        icon={<MdPercent className={icon} />}
+        title="Commissions Kovoit"
+        value={formatFcfa(indicateurs.commissions_kovoit)}
+        hint="Réellement prélevées sur la période"
       />
       <Widget
         icon={<MdVerifiedUser className={icon} />}

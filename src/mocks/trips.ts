@@ -1,6 +1,8 @@
 import type { ReservationStatus, SignalementStatus, TrajetStatus } from '@/config/enums'
 import type { DecisionLitige } from '@/features/reports/types'
+import type { Tarification } from '@/features/trips/types'
 import type { MockUser } from './people'
+import { mockTarification, repartir } from './tarification'
 
 // Trajets, réservations et signalements fictifs à Lomé (coordonnées approximatives de lieux connus).
 
@@ -28,7 +30,11 @@ const ROUTES: Array<{ depart: Place; points: Place[]; arrivee: Place }> = [
   { depart: PLACES.zongo, points: [PLACES.universite], arrivee: PLACES.grandMarche },
   { depart: PLACES.baguida, points: [PLACES.kegue, PLACES.hedzranawoe], arrivee: PLACES.chu },
   { depart: PLACES.kpota, points: [PLACES.deckon], arrivee: PLACES.nyekonakpoe },
-  { depart: PLACES.avedji, points: [PLACES.totsi, PLACES.universite, PLACES.chu], arrivee: PLACES.port },
+  {
+    depart: PLACES.avedji,
+    points: [PLACES.totsi, PLACES.universite, PLACES.chu],
+    arrivee: PLACES.port,
+  },
   { depart: PLACES.hedzranawoe, points: [], arrivee: PLACES.grandMarche },
 ]
 
@@ -41,7 +47,9 @@ export type MockTrajet = {
   places_total: number
   places_restantes: number
   distance_km: number
+  duree_min: number
   prix_place: number
+  tarification: Tarification
   statut: TrajetStatus
   points: Array<Place & { id: number; ordre: number }>
 }
@@ -55,6 +63,8 @@ export type MockReservation = {
   distance_km: number
   prix: number
   frais_service: number
+  commission: number
+  net_conducteur: number
   statut: ReservationStatus
   /** Présent en base, ne doit JAMAIS sortir de l'API */
   code_depart_hash: string | null
@@ -85,14 +95,14 @@ function haversineKm(a: Place, b: Place): number {
   const rad = (deg: number) => (deg * Math.PI) / 180
   const dLat = rad(b.lat - a.lat)
   const dLng = rad(b.lng - a.lng)
-  const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2
+  const h =
+    Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2
   return 6371 * 2 * Math.asin(Math.sqrt(h))
 }
 
 // En production : distance par la route (OSRM / Google). Ici : vol d'oiseau × 1,3.
 const roadKm = (a: Place, b: Place) => Math.round(haversineKm(a, b) * 1.3 * 10) / 10
 // Grille du PRD (valeurs de départ du paramètre grille_prix).
-const prixFor = (km: number) => (km < 5 ? 200 : km <= 10 ? 300 : 500)
 
 const PATHS: Record<ReservationStatus, ReservationStatus[]> = {
   demandee: ['demandee'],
@@ -106,7 +116,14 @@ const PATHS: Record<ReservationStatus, ReservationStatus[]> = {
   cloturee: ['demandee', 'acceptee', 'en_cours', 'terminee', 'cloturee'],
 }
 
-const OCCUPYING: ReservationStatus[] = ['acceptee', 'en_cours', 'terminee', 'cloturee', 'litige', 'absent']
+const OCCUPYING: ReservationStatus[] = [
+  'acceptee',
+  'en_cours',
+  'terminee',
+  'cloturee',
+  'litige',
+  'absent',
+]
 
 function timestampFor(statut: ReservationStatus, depart: number, cree: number): number {
   switch (statut) {
@@ -167,8 +184,13 @@ export function buildTrips(users: MockUser[], now: number, admin: MockSignalemen
       if (d === 5 && t === 0) statut = 'annule'
 
       const trajetId = 1000 + k
-      const points = route.points.map((place, index) => ({ ...place, id: pointId++, ordre: index + 1 }))
+      const points = route.points.map((place, index) => ({
+        ...place,
+        id: pointId++,
+        ordre: index + 1,
+      }))
       const distance = roadKm(route.depart, route.arrivee)
+      const tarification = mockTarification(distance, 3)
       const trajet: MockTrajet = {
         id: trajetId,
         conducteur_id: driver.id,
@@ -178,7 +200,9 @@ export function buildTrips(users: MockUser[], now: number, admin: MockSignalemen
         places_total: 3,
         places_restantes: 3,
         distance_km: distance,
-        prix_place: prixFor(distance),
+        duree_min: tarification.duree_min,
+        prix_place: tarification.prix_place,
+        tarification,
         statut,
         points,
       }
@@ -186,7 +210,11 @@ export function buildTrips(users: MockUser[], now: number, admin: MockSignalemen
       const count = Math.min(3, k % 4)
       for (let r = 0; r < count; r += 1) {
         const passenger = passengers[(k * 2 + r) % passengers.length]!
-        const point = points[r % Math.max(points.length, 1)] ?? { ...route.depart, id: pointId++, ordre: 0 }
+        const point = points[r % Math.max(points.length, 1)] ?? {
+          ...route.depart,
+          id: pointId++,
+          ordre: 0,
+        }
         const km = roadKm(point, route.arrivee)
         let resStatut: ReservationStatus =
           statut === 'annule'
@@ -207,11 +235,18 @@ export function buildTrips(users: MockUser[], now: number, admin: MockSignalemen
           point,
           arrivee: route.arrivee,
           distance_km: km,
-          prix: prixFor(km),
+          // Prix de la place figé à la publication du trajet (identique pour tous ses passagers)
+          prix: trajet.prix_place,
           frais_service: 0,
+          ...repartir(trajet.prix_place),
           statut: resStatut,
-          code_depart_hash: OCCUPYING.includes(resStatut) ? 'pbkdf2_sha256$fictif$NE-DOIT-JAMAIS-SORTIR' : null,
-          historique: PATHS[resStatut].map((s) => ({ statut: s, le: iso(timestampFor(s, departMs, cree)) })),
+          code_depart_hash: OCCUPYING.includes(resStatut)
+            ? 'pbkdf2_sha256$fictif$NE-DOIT-JAMAIS-SORTIR'
+            : null,
+          historique: PATHS[resStatut].map((s) => ({
+            statut: s,
+            le: iso(timestampFor(s, departMs, cree)),
+          })),
           cree_le: iso(cree),
         })
       }
@@ -227,7 +262,8 @@ export function buildTrips(users: MockUser[], now: number, admin: MockSignalemen
 
   // Signalements : un par litige (ouvert), plus quelques cas ouverts et traités.
   let signalementId = 800
-  const conducteurOf = (res: MockReservation) => trajets.find((t) => t.id === res.trajet_id)!.conducteur_id
+  const conducteurOf = (res: MockReservation) =>
+    trajets.find((t) => t.id === res.trajet_id)!.conducteur_id
   const addSignalement = (
     res: MockReservation,
     fromDriver: boolean,
@@ -258,8 +294,14 @@ export function buildTrips(users: MockUser[], now: number, admin: MockSignalemen
   litiges.forEach((res, index) => addSignalement(res, false, motifsLitige[index % 2]!))
 
   const closed = reservations.filter((res) => res.statut === 'cloturee')
-  if (closed[0]) addSignalement(closed[0], false, 'Conduite dangereuse : excès de vitesse sur le boulevard du 13 janvier.')
-  if (closed[2]) addSignalement(closed[2], true, 'Passager arrivé avec 15 minutes de retard et impoli.')
+  if (closed[0])
+    addSignalement(
+      closed[0],
+      false,
+      'Conduite dangereuse : excès de vitesse sur le boulevard du 13 janvier.',
+    )
+  if (closed[2])
+    addSignalement(closed[2], true, 'Passager arrivé avec 15 minutes de retard et impoli.')
   if (closed[4])
     addSignalement(closed[4], false, 'Climatisation en panne, trajet inconfortable.', {
       resolution: 'Conducteur informé, aucune sanction : incident mineur.',

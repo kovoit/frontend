@@ -16,6 +16,8 @@ export type Parametre = {
   unite: string
   /** Plus petite valeur acceptée par le backend */
   minimum: number
+  /** Plus grande valeur acceptée (null : pas de limite), ex. commission */
+  maximum: number | null
   modifie_le: string
   modifie_par: { id: Id; nom: string; prenom: string } | null
 }

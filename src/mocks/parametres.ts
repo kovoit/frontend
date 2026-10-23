@@ -8,15 +8,116 @@ type Ligne = [
   description: string,
   unite: string,
   minimum: number,
+  maximum?: number,
 ]
 
 const GROUPES: Array<{ code: string; libelle: string; lignes: Ligne[] }> = [
   {
-    code: 'prix',
-    libelle: 'Prix et portefeuille',
+    code: 'tarification',
+    libelle: 'Tarification des trajets',
     lignes: [
-      ['prix_simulation', 300, 'entier', 'Prix temporaire par passager (F CFA).', 'F CFA', 0],
-      ['frais_service', 0, 'entier', 'Frais de service Kovoit par passager (F CFA).', 'F CFA', 0],
+      ['prix_carburant_litre', 817, 'entier', 'Prix du carburant (F CFA par litre).', 'F CFA/L', 1],
+      [
+        'consommation_voiture_l_100km',
+        7,
+        'decimal',
+        "Consommation de référence d'une voiture, si le véhicule n'a pas la sienne (hypothèse à valider).",
+        'L/100 km',
+        0.5,
+        30,
+      ],
+      [
+        'consommation_moto_l_100km',
+        2.5,
+        'decimal',
+        "Consommation de référence d'une moto, si le véhicule n'a pas la sienne (hypothèse à valider).",
+        'L/100 km',
+        0.5,
+        30,
+      ],
+      [
+        'majoration_charge_par_passager_pct',
+        0,
+        'decimal',
+        'Surconsommation due à la charge, par passager prévu (%). 0 : non appliquée.',
+        '%',
+        0,
+        10,
+      ],
+      [
+        'cout_horaire_conducteur',
+        0,
+        'entier',
+        'Coût du temps du conducteur (F CFA/h). 0 : partage des seuls frais du véhicule.',
+        'F CFA/h',
+        0,
+      ],
+      [
+        'entretien_voiture_par_km',
+        0,
+        'decimal',
+        "Entretien et usure d'une voiture (F CFA/km). 0 : non compté.",
+        'F CFA/km',
+        0,
+      ],
+      [
+        'entretien_moto_par_km',
+        0,
+        'decimal',
+        "Entretien et usure d'une moto (F CFA/km). 0 : non compté.",
+        'F CFA/km',
+        0,
+      ],
+      [
+        'taux_commission_pct',
+        15,
+        'decimal',
+        'Commission Kovoit, prélevée sur les paiements des passagers et à la charge du conducteur (%).',
+        '%',
+        0,
+        50,
+      ],
+      [
+        'arrondi_prix_fcfa',
+        5,
+        'entier',
+        "Le prix d'une place est arrondi au multiple supérieur de ce montant (F CFA).",
+        'F CFA',
+        1,
+        100,
+      ],
+      [
+        'prix_minimum_place',
+        0,
+        'entier',
+        "Prix minimum d'une place (F CFA). 0 : aucun minimum.",
+        'F CFA',
+        0,
+      ],
+      [
+        'coef_detour_estimation',
+        1.3,
+        'decimal',
+        "Itinéraire indisponible : distance estimée = vol d'oiseau × ce coefficient.",
+        '×',
+        1,
+        3,
+      ],
+      [
+        'vitesse_moyenne_kmh',
+        25,
+        'entier',
+        'Itinéraire indisponible : durée estimée à cette vitesse moyenne (km/h).',
+        'km/h',
+        5,
+        120,
+      ],
+    ],
+  },
+  {
+    code: 'prix',
+    libelle: 'Portefeuille et paiements',
+    lignes: [
       [
         'recharge_min',
         500,
@@ -155,7 +256,7 @@ const GROUPES: Array<{ code: string; libelle: string; lignes: Ligne[] }> = [
 
 export function buildParametres(now: number): Parametre[] {
   return GROUPES.flatMap(({ code, libelle, lignes }) =>
-    lignes.map(([cle, valeur, type_valeur, description, unite, minimum]) => ({
+    lignes.map(([cle, valeur, type_valeur, description, unite, minimum, maximum]) => ({
       cle,
       valeur,
       type_valeur,
@@ -163,6 +264,7 @@ export function buildParametres(now: number): Parametre[] {
       groupe: { code, libelle },
       unite,
       minimum,
+      maximum: maximum ?? null,
       modifie_le: new Date(now).toISOString(),
       modifie_par: null,
     })),

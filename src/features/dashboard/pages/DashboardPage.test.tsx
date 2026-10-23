@@ -21,6 +21,7 @@ function fixedStats(overrides: Partial<DashboardStats> = {}): DashboardStats {
       trajets_termines: 1102,
       passagers_transportes: 2087,
       economies_realisees: 605230,
+      commissions_kovoit: 106805,
       utilisateurs_verifies: 412,
       conducteurs_verifies: 87,
     },
@@ -39,6 +40,7 @@ describe('tableau de bord', () => {
     expect(within(kpis).getByText('1 240 publiés sur la période')).toBeVisible()
     expect(within(kpis).getByText('2 087')).toBeVisible()
     expect(within(kpis).getByText('605 230 FCFA')).toBeVisible()
+    expect(within(kpis).getByText('106 805 FCFA')).toBeVisible()
     expect(within(kpis).getByText('À ce jour, dont 87 conducteurs')).toBeVisible()
     expect(screen.queryByText(/comptes de démonstration/)).not.toBeInTheDocument()
   })

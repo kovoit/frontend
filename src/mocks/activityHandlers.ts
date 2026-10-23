@@ -3,7 +3,11 @@ import { env } from '@/config/env'
 import { fail, invalid, notFound, ok, unauthorized } from './envelope'
 import { PAGE_SIZE } from '@/config/pagination'
 import type { ReservationDetail, ReservationListItem } from '@/features/bookings/types'
-import type { DecisionLitige, SignalementDetail, SignalementListItem } from '@/features/reports/types'
+import type {
+  DecisionLitige,
+  SignalementDetail,
+  SignalementListItem,
+} from '@/features/reports/types'
 import type { TrajetDetail, TrajetListItem } from '@/features/trips/types'
 import { userFromAuthHeader } from './db'
 import { db, MOCK_ADMIN, type MockUser } from './people'
@@ -37,7 +41,12 @@ const summary = (user: MockUser) => ({
   email: user.email,
   telephone: user.telephone,
 })
-const userFields = (user: MockUser) => [user.nom, user.prenom, `${user.prenom}${user.nom}`, user.telephone]
+const userFields = (user: MockUser) => [
+  user.nom,
+  user.prenom,
+  `${user.prenom}${user.nom}`,
+  user.telephone,
+]
 const trajetById = (id: number) => db.trajets.find((trajet) => trajet.id === id)!
 
 // ---- Sérialisation (le code de départ n'est jamais inclus) ----
@@ -54,6 +63,9 @@ function toReservationListItem(res: MockReservation): ReservationListItem {
     depart_le: trajet.depart_le,
     prix: res.prix,
     frais_service: res.frais_service,
+    taux_commission_pct: '15.00',
+    commission: res.commission,
+    net_conducteur: res.net_conducteur,
     statut: res.statut,
     cree_le: res.cree_le,
   }
@@ -89,6 +101,7 @@ function toTrajetListItem(trajet: MockTrajet): TrajetListItem {
     places_total: trajet.places_total,
     places_restantes: trajet.places_restantes,
     distance_km: trajet.distance_km,
+    duree_min: trajet.duree_min,
     prix_place: trajet.prix_place,
     statut: trajet.statut,
   }
@@ -99,7 +112,10 @@ function toTrajetDetail(trajet: MockTrajet): TrajetDetail {
     ...toTrajetListItem(trajet),
     vehicule: userById(trajet.conducteur_id).vehicule!,
     points: trajet.points.map((point) => ({ ...point, id: String(point.id) })),
-    reservations: db.reservations.filter((r) => r.trajet_id === trajet.id).map(toReservationListItem),
+    reservations: db.reservations
+      .filter((r) => r.trajet_id === trajet.id)
+      .map(toReservationListItem),
+    tarification: trajet.tarification,
   }
 }
 

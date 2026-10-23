@@ -19,7 +19,13 @@ export type ReservationListItem = {
   depart_le: string
   /** Prix payé par le passager (FCFA), calculé par le backend */
   prix: number
+  /** Ancien modèle (frais payés par le passager) : 0 pour les nouvelles réservations */
   frais_service: number
+  /** Taux figé à la publication du trajet (chaîne décimale, ex. « 15.00 ») */
+  taux_commission_pct: string
+  /** Commission Kovoit et net conducteur de cette place : commission + net = prix */
+  commission: number
+  net_conducteur: number
   statut: ReservationStatus
   cree_le: string
 }

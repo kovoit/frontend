@@ -24,8 +24,13 @@ describe('liste des trajets', () => {
 
     expect(router.state.location.search).toBe('?statut=termine')
     const expected = db.trajets.filter((t) => t.statut === 'termine').length
-    await waitFor(() => expect(screen.getByText(`1–${Math.min(expected, 20)} sur ${expected}`)).toBeVisible())
-    screen.getAllByRole('row').slice(1).forEach((row) => expect(row).toHaveTextContent('Terminé'))
+    await waitFor(() =>
+      expect(screen.getByText(`1–${Math.min(expected, 20)} sur ${expected}`)).toBeVisible(),
+    )
+    screen
+      .getAllByRole('row')
+      .slice(1)
+      .forEach((row) => expect(row).toHaveTextContent('Terminé'))
   })
 
   it('recherche par lieu', async () => {
@@ -42,11 +47,15 @@ describe('liste des trajets', () => {
 
 describe('détail d’un trajet', () => {
   it('affiche la carte, les arrêts dans l’ordre et les réservations', async () => {
-    const trajet = db.trajets.find((t) => t.points.length === 2 && db.reservations.some((r) => r.trajet_id === t.id))!
+    const trajet = db.trajets.find(
+      (t) => t.points.length === 2 && db.reservations.some((r) => r.trajet_id === t.id),
+    )!
     renderAt(`/admin/trips/${trajet.id}`, { asAdmin: true })
 
     expect(await screen.findByTestId('route-map')).toBeInTheDocument()
-    const stops = within(screen.getByRole('list', { name: 'Arrêts du trajet' })).getAllByRole('listitem')
+    const stops = within(screen.getByRole('list', { name: 'Arrêts du trajet' })).getAllByRole(
+      'listitem',
+    )
     expect(stops.map((li) => li.textContent)).toEqual([
       `Départ${trajet.depart.libelle}`,
       ...trajet.points.map((p) => `Prise en charge${p.libelle}`),
@@ -57,5 +66,20 @@ describe('détail d’un trajet', () => {
     expect(screen.getByRole('heading', { name: `Réservations (${count})` })).toBeVisible()
     const table = screen.getByRole('table', { name: 'Réservations du trajet' })
     expect(within(table).getAllByRole('row')).toHaveLength(count + 1)
+  })
+
+  it('affiche le calcul du prix figé à la publication, sans le recalculer', async () => {
+    const trajet = db.trajets[0]!
+    const t = trajet.tarification
+    renderAt(`/admin/trips/${trajet.id}`, { asAdmin: true })
+
+    const carte = (await screen.findByRole('heading', { name: 'Calcul du prix' })).closest(
+      'section, div',
+    )!
+    const texte = carte.parentElement!.textContent!.replace(/\s/g, ' ')
+    expect(texte).toContain('Commission Kovoit (15 %) par place')
+    expect(texte).toContain(`${t.commission_place} FCFA`.replace(/\s/g, ' '))
+    expect(texte).toContain('Participation du conducteur')
+    expect(t.commission_place + t.net_conducteur_place).toBe(t.prix_place)
   })
 })

@@ -17,6 +17,7 @@ import {
   bookingRouteColumn,
   bookingStatusColumn,
 } from '@/features/bookings/components/bookingColumns'
+import { TarificationCard } from '../components/TarificationCard'
 import { formatDateTime, formatFcfa, formatKm } from '@/utils/format'
 import { useTrip } from '../api'
 
@@ -48,11 +49,29 @@ export function TripDetailPage() {
   }
 
   const stops = [
-    { key: 'depart', label: trajet.depart.libelle, lat: trajet.depart.lat, lng: trajet.depart.lng, kind: 'depart' as const },
+    {
+      key: 'depart',
+      label: trajet.depart.libelle,
+      lat: trajet.depart.lat,
+      lng: trajet.depart.lng,
+      kind: 'depart' as const,
+    },
     ...[...trajet.points]
       .sort((a, b) => a.ordre - b.ordre)
-      .map((point) => ({ key: `p${point.id}`, label: point.libelle, lat: point.lat, lng: point.lng, kind: 'point' as const })),
-    { key: 'arrivee', label: trajet.arrivee.libelle, lat: trajet.arrivee.lat, lng: trajet.arrivee.lng, kind: 'arrivee' as const },
+      .map((point) => ({
+        key: `p${point.id}`,
+        label: point.libelle,
+        lat: point.lat,
+        lng: point.lng,
+        kind: 'point' as const,
+      })),
+    {
+      key: 'arrivee',
+      label: trajet.arrivee.libelle,
+      lat: trajet.arrivee.lat,
+      lng: trajet.arrivee.lng,
+      kind: 'arrivee' as const,
+    },
   ]
 
   return (
@@ -85,15 +104,27 @@ export function TripDetailPage() {
                   </Link>
                 ),
               },
-              { label: 'Véhicule', value: `${trajet.vehicule.marque} ${trajet.vehicule.modele} · ${trajet.vehicule.couleur}` },
+              {
+                label: 'Véhicule',
+                value: `${trajet.vehicule.marque} ${trajet.vehicule.modele} · ${trajet.vehicule.couleur}`,
+              },
               { label: 'Immatriculation', value: trajet.vehicule.immatriculation },
-              { label: 'Places libres', value: `${trajet.places_restantes} / ${trajet.places_total}` },
+              {
+                label: 'Places libres',
+                value: `${trajet.places_restantes} / ${trajet.places_total}`,
+              },
               { label: 'Distance (route)', value: formatKm(trajet.distance_km) },
+              {
+                label: 'Durée estimée',
+                value: trajet.duree_min === null ? '—' : `${trajet.duree_min} min`,
+              },
               { label: 'Prix par place', value: formatFcfa(trajet.prix_place) },
             ]}
           />
         </Card>
       </div>
+
+      <TarificationCard tarification={trajet.tarification} />
 
       <section aria-labelledby="trip-bookings" className="flex flex-col gap-3">
         <h2 id="trip-bookings" className="text-lg font-bold">

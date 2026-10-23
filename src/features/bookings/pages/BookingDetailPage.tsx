@@ -65,13 +65,26 @@ export function BookingDetailPage() {
                 { label: 'Arrivée du passager', value: res.arrivee.libelle },
                 { label: 'Départ du trajet', value: formatDateTime(res.depart_le) },
                 { label: 'Distance facturée', value: formatKm(res.distance_km) },
-                { label: 'Prix', value: formatFcfa(res.prix) },
-                { label: 'Frais de service', value: formatFcfa(res.frais_service) },
+                { label: 'Prix payé par le passager', value: formatFcfa(res.prix) },
+                ...(res.frais_service
+                  ? [
+                      {
+                        label: 'Frais de service (ancien modèle)',
+                        value: formatFcfa(res.frais_service),
+                      },
+                    ]
+                  : []),
+                {
+                  label: `Commission Kovoit (${Number(res.taux_commission_pct).toLocaleString('fr-FR')} %)`,
+                  value: formatFcfa(res.commission),
+                },
+                { label: 'Net reversé au conducteur', value: formatFcfa(res.net_conducteur) },
               ]}
             />
             <p className="flex items-center gap-2 text-xs text-muted">
               <MdLock aria-hidden className="h-4 w-4" />
-              Le code de départ n'est jamais affiché : il est stocké haché et seul le passager le connaît.
+              Le code de départ n'est jamais affiché : il est stocké haché et seul le passager le
+              connaît.
             </p>
           </Card>
 

@@ -22,8 +22,10 @@ export type DashboardStats = {
     trajets_publies: number
     trajets_termines: number
     passagers_transportes: number
-    /** Somme payée par les passagers aux conducteurs (FCFA), cf. PRD « Économies affichées » */
+    /** Net reçu par les conducteurs (FCFA) : crédits − commissions, cf. PRD « Économies affichées » */
     economies_realisees: number
+    /** Commissions Kovoit réellement prélevées sur la période (lignes du journal, FCFA) */
+    commissions_kovoit: number
     /** Utilisateurs avec un KYC (passager ou conducteur) au statut verifie, à la fin de la période */
     utilisateurs_verifies: number
     conducteurs_verifies: number

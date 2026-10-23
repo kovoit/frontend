@@ -14,9 +14,11 @@ function isoDay(date: Date): string {
 }
 
 function periodDays(periode: Periode, today: Date): Date[] {
-  const count =
-    periode === '7j' ? 7 : periode === '30j' ? 30 : today.getUTCDate() // mois en cours
-  return Array.from({ length: count }, (_, i) => new Date(today.getTime() - (count - 1 - i) * DAY_MS))
+  const count = periode === '7j' ? 7 : periode === '30j' ? 30 : today.getUTCDate() // mois en cours
+  return Array.from(
+    { length: count },
+    (_, i) => new Date(today.getTime() - (count - 1 - i) * DAY_MS),
+  )
 }
 
 /** Statistiques fictives mais cohérentes (Lomé, pilote de quelques dizaines de conducteurs). */
@@ -54,7 +56,8 @@ export function buildMockStats(periode: Periode, today = new Date()): DashboardS
       trajets_publies: Math.round(trajetsTermines * 1.12),
       trajets_termines: trajetsTermines,
       passagers_transportes: passagers,
-      economies_realisees: passagers * prixMoyen,
+      economies_realisees: Math.round(passagers * prixMoyen * 0.85),
+      commissions_kovoit: Math.round(passagers * prixMoyen * 0.15),
       utilisateurs_verifies: 412,
       conducteurs_verifies: 87,
     },

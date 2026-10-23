@@ -56,6 +56,7 @@ export const TRANSACTION_TYPE = {
   credit: 'Crédit conducteur',
   retrait: 'Retrait',
   remboursement: 'Remboursement',
+  commission: 'Commission Kovoit',
 } as const
 export type TransactionType = keyof typeof TRANSACTION_TYPE
 

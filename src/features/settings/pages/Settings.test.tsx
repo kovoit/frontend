@@ -26,11 +26,27 @@ describe('paramètres', () => {
     expect(rayon).toHaveTextContent('1,5 km')
     expect(rayon).toHaveTextContent('rayon_depart_km')
 
-    const prix = screen.getByRole('list', { name: 'Prix et portefeuille' })
-    expect(within(prix).getAllByRole('listitem')).toHaveLength(4)
+    const tarif = screen.getByRole('list', { name: 'Tarification des trajets' })
+    expect(within(tarif).getAllByRole('listitem')).toHaveLength(12)
     expect(
-      within(prix).getByText('Prix temporaire par passager (F CFA).').closest('li'),
-    ).toHaveTextContent('300 FCFA')
+      within(tarif).getByText('Prix du carburant (F CFA par litre).').closest('li'),
+    ).toHaveTextContent('817')
+    expect(screen.getByRole('list', { name: 'Portefeuille et paiements' })).toBeVisible()
+  })
+
+  it('refuse une commission au-delà du maximum accepté par le backend', async () => {
+    renderAt('/admin/settings', { asAdmin: true })
+    const dialog = await ouvrirEdition(
+      'Commission Kovoit, prélevée sur les paiements des passagers et à la charge du conducteur (%).',
+    )
+
+    const champ = within(dialog).getByLabelText('Nouvelle valeur (%)')
+    await userEvent.clear(champ)
+    await userEvent.type(champ, '60')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Enregistrer' }))
+
+    expect(await within(dialog).findByText(/^Maximum : 50/)).toBeVisible()
+    expect(db.parametres.find((p) => p.cle === 'taux_commission_pct')!.valeur).toBe(15)
   })
 
   it('modifie une valeur et affiche qui l’a changée', async () => {

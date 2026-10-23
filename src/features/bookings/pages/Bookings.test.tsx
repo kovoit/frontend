@@ -47,4 +47,14 @@ describe('réservations', () => {
       `/admin/reports/${report.id}`,
     )
   })
+
+  it('affiche la commission Kovoit et le net du conducteur de la place', async () => {
+    const res = db.reservations[0]!
+    renderAt(`/admin/bookings/${res.id}`, { asAdmin: true })
+
+    expect(await screen.findByText('Commission Kovoit (15 %)')).toBeVisible()
+    expect(screen.getByText('Net reversé au conducteur')).toBeVisible()
+    expect(screen.queryByText(/Frais de service/)).not.toBeInTheDocument()
+    expect(res.commission + res.net_conducteur).toBe(res.prix)
+  })
 })

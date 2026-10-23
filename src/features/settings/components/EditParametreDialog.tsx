@@ -11,11 +11,17 @@ import { useUpdateParametre } from '../api'
 import type { Parametre } from '../types'
 import { formatValeur } from '../valeur'
 
-/** Règles du backend (type, minimum) rejouées côté front pour un retour immédiat. */
+/** Règles du backend (type, minimum, maximum) rejouées côté front pour un retour immédiat. */
 function schemaPour(parametre: Parametre) {
   let valeur = z.number({ error: 'Saisissez un nombre.' })
   if (parametre.type_valeur === 'entier') valeur = valeur.int('Saisissez un nombre entier.')
   valeur = valeur.min(parametre.minimum, `Minimum : ${formatValeur(parametre, parametre.minimum)}.`)
+  if (parametre.maximum !== null) {
+    valeur = valeur.max(
+      parametre.maximum,
+      `Maximum : ${formatValeur(parametre, parametre.maximum)}.`,
+    )
+  }
   return z.object({ valeur })
 }
 
@@ -80,6 +86,7 @@ export function EditParametreDialog({ parametre, onClose, onSaved }: EditParamet
           inputMode={parametre.type_valeur === 'entier' ? 'numeric' : 'decimal'}
           step={parametre.type_valeur === 'entier' ? 1 : 0.1}
           min={parametre.minimum}
+          max={parametre.maximum ?? undefined}
           error={errors.valeur?.message}
           {...register('valeur', { valueAsNumber: true })}
         />
