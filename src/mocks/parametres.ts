@@ -87,6 +87,14 @@ const GROUPES: Array<{ code: string; libelle: string; lignes: Ligne[] }> = [
         1,
       ],
       [
+        'delai_resolution_h',
+        6,
+        'entier',
+        'Réservation acceptée sans prise en charge ni absence : annulée et argent débloqué ce délai après le départ (h).',
+        'h',
+        1,
+      ],
+      [
         'code_depart_max_essais',
         5,
         'entier',
