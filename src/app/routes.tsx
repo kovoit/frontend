@@ -1,5 +1,4 @@
 import { Navigate, type RouteObject } from 'react-router'
-import { env } from '@/config/env'
 import { LoginPage } from '@/features/auth/pages/LoginPage'
 import { RequireAuth } from '@/features/auth/RequireAuth'
 import { AdminLayout } from '@/layouts/AdminLayout'
@@ -90,17 +89,13 @@ const adminPages: RouteObject[] = [
         Component: m.AuditEventPage,
       })),
   },
-  ...(env.featureWallet
-    ? [
-        {
-          path: 'transactions',
-          lazy: () =>
-            import('@/features/transactions/pages/TransactionsPage').then((m) => ({
-              Component: m.TransactionsPage,
-            })),
-        },
-      ]
-    : []),
+  {
+    path: 'transactions',
+    lazy: () =>
+      import('@/features/transactions/pages/TransactionsPage').then((m) => ({
+        Component: m.TransactionsPage,
+      })),
+  },
   {
     path: 'settings',
     lazy: () =>

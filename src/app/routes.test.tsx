@@ -40,9 +40,9 @@ describe('routing du back-office', () => {
     expect(await screen.findByText('Page introuvable')).toBeVisible()
   })
 
-  it("n'expose pas l'écran Transactions quand l'option portefeuille est désactivée", async () => {
+  it("expose l'écran Transactions (portefeuille PayGate du MVP)", async () => {
     renderAt('/admin', { asAdmin: true })
     await screen.findByRole('heading', { level: 1 })
-    expect(screen.queryByRole('link', { name: /Transactions/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Transactions/ })).toBeVisible()
   })
 })

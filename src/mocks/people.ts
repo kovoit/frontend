@@ -1,6 +1,7 @@
 import type { Vehicule } from '@/api/types'
 import type { CompteStatus, KycStatus, KycType, PieceType } from '@/config/enums'
 import { buildParametres } from './parametres'
+import { buildTransactions } from './transactions'
 import { buildTrips } from './trips'
 
 // Base de données fictive en mémoire (mode mock et tests). Personnes et documents imaginaires.
@@ -140,7 +141,13 @@ function build() {
     if (isDriver) addDossier('conducteur', user.kyc_conducteur)
   }
 
-  return { users, dossiers, parametres: buildParametres(MOCK_NOW), ...buildTrips(users, MOCK_NOW, ADMIN) }
+  return {
+    users,
+    dossiers,
+    parametres: buildParametres(MOCK_NOW),
+    transactions: buildTransactions(users, MOCK_NOW),
+    ...buildTrips(users, MOCK_NOW, ADMIN),
+  }
 }
 
 export let db = build()

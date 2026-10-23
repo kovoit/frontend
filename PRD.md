@@ -344,7 +344,7 @@ Application web React + TypeScript construite à partir du template Horizon UI e
 | Réservations | Liste filtrable par statut ; détail avec la chronologie des statuts horodatés, le prix et les frais | Consulter | Le code de départ n'est jamais affiché |
 | Signalements et litiges | File des signalements `ouvert` ; détail avec le trajet, la réservation, les parties et leurs notes | Marquer traité avec une résolution ; trancher un litige (clôture, remboursement si portefeuille) | La résolution est obligatoire ; un litige tranché passe à `cloturee` |
 | Paramètres | Toutes les clés du tableau « Paramètres administrateur » | Modifier une valeur | Validation des types et des bornes ; affichage de `modifie_le` et `modifie_par` |
-| Transactions | Journal filtrable (type, utilisateur, période) | Consulter | Uniquement si l'option portefeuille est retenue |
+| Transactions | Retraits à verser (les plus anciens d'abord) ; journal filtrable (type, statut, moyen, recherche) | Marquer un retrait versé (référence du transfert obligatoire) ; le refuser (motif obligatoire, montant rendu disponible) | Retraits versés à la main sur Flooz / Mixx (pas de versement automatique PayGate) ; chaque action est tracée dans l'audit |
 
 ## Charte graphique (Nana Tech)
 

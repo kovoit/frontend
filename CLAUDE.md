@@ -35,7 +35,7 @@ npm run lint       # ESLint
 npm run format     # Prettier
 ```
 
-Variables d'environnement (`.env.local`, jamais commité ; modèle dans `.env.example`) : `VITE_API_URL`, `VITE_USE_MOCKS` (`true` = MSW, `npm run dev` uniquement, ignoré au build, bandeau « données simulées » affiché), `VITE_FEATURE_WALLET` (`true` = écran Transactions, option portefeuille).
+Variables d'environnement (`.env.local`, jamais commité ; modèle dans `.env.example`) : `VITE_API_URL`, `VITE_USE_MOCKS` (`true` = MSW, `npm run dev` uniquement, ignoré au build, bandeau « données simulées » affiché). Le portefeuille (PayGate) fait partie du MVP : l'écran Transactions est toujours affiché.
 
 ## 3. Arborescence
 
@@ -57,7 +57,7 @@ src/
 │   ├── trips/          # trajets + points de prise en charge (carte)
 │   ├── bookings/       # réservations, timeline des statuts
 │   ├── reports/        # signalements & litiges, arbitrage
-│   ├── transactions/   # journal (uniquement si portefeuille retenu)
+│   ├── transactions/   # journal des transactions, retraits à verser (Flooz / Mixx)
 │   ├── settings/       # paramètres administrateur
 │   └── audit/          # journal d'audit : indicateurs, fil d'activité en direct (flux interrogé toutes les 5 s), détail, activité d'un utilisateur
 ├── hooks/  utils/  # formatage FCFA, dates (Africa/Lome), helpers

@@ -6,6 +6,7 @@ import { activityHandlers } from './activityHandlers'
 import { adminHandlers } from './adminHandlers'
 import { auditHandlers } from './auditHandlers'
 import { settingsHandlers } from './settingsHandlers'
+import { transactionHandlers } from './transactionHandlers'
 import { buildMockStats } from './dashboard'
 import { accessTokenFor, MOCK_ACCOUNTS, mockSession, toPublicUser, userFromAuthHeader } from './db'
 import { db } from './people'
@@ -76,4 +77,5 @@ export const handlers = [
   ...activityHandlers,
   ...settingsHandlers,
   ...auditHandlers,
+  ...transactionHandlers,
 ]

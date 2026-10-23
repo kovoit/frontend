@@ -41,6 +41,27 @@ export const SIGNALEMENT_STATUS = {
   traite: { label: 'Traité', tone: 'success' },
 } as const satisfies Record<string, StatusMeta>
 
+// Portefeuille (backend : apps/portefeuille/models.py)
+export const TRANSACTION_STATUT = {
+  validee: { label: 'Validée', tone: 'success' },
+  en_attente: { label: 'En attente', tone: 'warning' },
+  echouee: { label: 'Échouée', tone: 'danger' },
+} as const satisfies Record<string, StatusMeta>
+
+export const TRANSACTION_TYPE = {
+  recharge: 'Recharge',
+  blocage: 'Blocage',
+  deblocage: 'Déblocage',
+  debit: 'Débit',
+  credit: 'Crédit conducteur',
+  retrait: 'Retrait',
+  remboursement: 'Remboursement',
+} as const
+export type TransactionType = keyof typeof TRANSACTION_TYPE
+
+export const MOYEN_PAIEMENT = { flooz: 'Flooz', mixx: 'Mixx' } as const
+export type MoyenPaiement = keyof typeof MOYEN_PAIEMENT
+
 // Journal d'audit (backend : apps/audit/models.py)
 export const AUDIT_RESULTAT = {
   succes: { label: 'Réussi', tone: 'success' },
@@ -82,6 +103,7 @@ export const STATUS_DOMAINS = {
   kyc: KYC_STATUS,
   compte: COMPTE_STATUS,
   signalement: SIGNALEMENT_STATUS,
+  transaction: TRANSACTION_STATUT,
   auditResultat: AUDIT_RESULTAT,
   auditCategorie: AUDIT_CATEGORIE,
   auditGravite: AUDIT_GRAVITE,
@@ -95,6 +117,7 @@ export type TrajetStatus = keyof typeof TRAJET_STATUS
 export type KycStatus = keyof typeof KYC_STATUS
 export type CompteStatus = keyof typeof COMPTE_STATUS
 export type SignalementStatus = keyof typeof SIGNALEMENT_STATUS
+export type TransactionStatut = keyof typeof TRANSACTION_STATUT
 
 export const KYC_TYPE = { passager: 'Passager', conducteur: 'Conducteur' } as const
 export type KycType = keyof typeof KYC_TYPE

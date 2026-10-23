@@ -10,7 +10,6 @@ import {
   MdSettings,
   MdVerifiedUser,
 } from 'react-icons/md'
-import { env } from '@/config/env'
 
 export type NavItem = {
   label: string
@@ -32,15 +31,11 @@ export const NAV_ITEMS: NavItem[] = [
     to: '/admin/reports',
     icon: <MdReportProblem className={iconClass} />,
   },
-  ...(env.featureWallet
-    ? [
-        {
-          label: 'Transactions',
-          to: '/admin/transactions',
-          icon: <MdReceiptLong className={iconClass} />,
-        },
-      ]
-    : []),
+  {
+    label: 'Transactions',
+    to: '/admin/transactions',
+    icon: <MdReceiptLong className={iconClass} />,
+  },
   {
     label: 'Audit et activités',
     to: '/admin/audit',
