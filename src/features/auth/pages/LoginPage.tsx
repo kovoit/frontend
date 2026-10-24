@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { MdErrorOutline, MdLockOutline, MdMailOutline } from 'react-icons/md'
 import { RiEyeLine, RiEyeOffLine } from 'react-icons/ri'
-import { Navigate, useLocation, useNavigate } from 'react-router'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router'
 import { z } from 'zod'
 import { toApiError } from '@/api/client'
 import { Button } from '@/components/ui/Button'
@@ -116,6 +116,13 @@ export function LoginPage() {
           {mutation.isPending ? 'Connexion…' : 'Se connecter'}
         </Button>
       </form>
+
+      <Link
+        to="/mot-de-passe-oublie"
+        className="-mt-2 text-center text-sm font-semibold text-brand-700 hover:underline dark:text-brand-200"
+      >
+        Mot de passe oublié ?
+      </Link>
 
       <p className="text-center text-xs text-muted">
         Accès réservé à l'équipe Kovoit.

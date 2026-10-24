@@ -50,6 +50,31 @@ export const handlers = [
     return ok(toPublicUser(account))
   }),
 
+  // Mot de passe oublié (apps/accounts/api/admin_mot_de_passe.py) : jeton de test « jeton-valide »
+  http.post(url('/auth/admin/mot-de-passe/oublie/'), () =>
+    ok(null, {
+      message:
+        "Si cette adresse correspond à un compte administrateur, un lien de réinitialisation vient d'y être envoyé.",
+    }),
+  ),
+
+  http.post(url('/auth/admin/mot-de-passe/reinitialiser/'), async ({ request }) => {
+    const { jeton, mot_de_passe } = (await request.json()) as { jeton: string; mot_de_passe: string }
+    if (jeton !== 'jeton-valide') {
+      return fail(
+        400,
+        "Ce lien n'est plus valable. Demandez un nouveau lien de réinitialisation.",
+        'LIEN_INVALIDE',
+      )
+    }
+    if (/^\d+$/.test(mot_de_passe)) {
+      return fail(400, 'Mot de passe trop faible.', 'MOT_DE_PASSE_FAIBLE', {
+        mot_de_passe: ['Ce mot de passe est entièrement numérique.'],
+      })
+    }
+    return ok(null, { message: 'Mot de passe modifié.' })
+  }),
+
   http.post(url('/auth/admin/deconnexion/'), () => {
     mockSession.end()
     return ok(null, { message: 'Déconnexion effectuée.' })

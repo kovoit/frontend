@@ -111,7 +111,24 @@ export const routes: RouteObject[] = [
     path: '/',
     element: <AuthLayout />,
     errorElement: <RouteErrorPage />,
-    children: [{ index: true, element: <LoginPage /> }],
+    children: [
+      { index: true, element: <LoginPage /> },
+      {
+        path: 'mot-de-passe-oublie',
+        lazy: () =>
+          import('@/features/auth/pages/ForgotPasswordPage').then((m) => ({
+            Component: m.ForgotPasswordPage,
+          })),
+      },
+      {
+        // Lien reçu par email : /reinitialiser?uid=…&jeton=…
+        path: 'reinitialiser',
+        lazy: () =>
+          import('@/features/auth/pages/ResetPasswordPage').then((m) => ({
+            Component: m.ResetPasswordPage,
+          })),
+      },
+    ],
   },
   // Ancienne URL de connexion, conservée pour les liens existants.
   { path: '/auth/*', element: <Navigate to="/" replace /> },
