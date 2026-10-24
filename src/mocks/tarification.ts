@@ -1,7 +1,7 @@
 import type { Tarification } from '@/features/trips/types'
 
 // Mode mock et tests uniquement : instantané au format de l'API (apps/tarification/calcul.py),
-// valeurs de départ des paramètres (voiture, 7 L/100 km, 817 F/L, commission 15 %, arrondi 5 F).
+// valeurs de départ des paramètres (voiture, 8 L/100 km, 817 F/L, commission 15 %, arrondi 5 F).
 // En production, le back-office n'effectue aucun calcul de prix : il affiche celui de l'API.
 
 const TAUX = 15
@@ -14,7 +14,7 @@ export const repartir = (prix: number) => {
 
 export function mockTarification(km: number, places: number): Tarification {
   const minutes = Math.round((km / 25) * 60)
-  const litres = (km * 7) / 100
+  const litres = (km * 8) / 100
   const total = litres * 817
   const part = total / (places + 1)
   const contribution = total - part
@@ -28,7 +28,7 @@ export function mockTarification(km: number, places: number): Tarification {
     duree_min: minutes,
     source_itineraire: 'routage',
     passagers_prevus: places,
-    consommation_retenue_l_100km: '7.000',
+    consommation_retenue_l_100km: '8.000',
     carburant_litres: s(litres, 3),
     cout_carburant: s(total, 3),
     cout_temps: '0.000',
@@ -45,7 +45,7 @@ export function mockTarification(km: number, places: number): Tarification {
     net_conducteur: net_conducteur * places,
     parametres: {
       prix_carburant_litre: '817.000',
-      consommation_l_100km: '7.000',
+      consommation_l_100km: '8.000',
       source_consommation: 'reference_voiture',
       majoration_charge_par_passager_pct: '0.000',
       cout_horaire_conducteur: '0.000',
