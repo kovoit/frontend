@@ -1,6 +1,8 @@
 import { HiX } from 'react-icons/hi'
 import { NavLink } from 'react-router'
 import { NAV_ITEMS } from '@/app/navigation'
+import { useAuth } from '@/features/auth/authContext'
+import { aLeRole } from '@/features/auth/types'
 import { cn } from '@/utils/cn'
 import { Logo } from './Logo'
 
@@ -11,6 +13,7 @@ type SidebarProps = {
 
 // Sidebar Horizon re-skinnée Nana Tech.
 export function Sidebar({ open, onClose }: SidebarProps) {
+  const { user } = useAuth()
   return (
     <>
       {open && (
@@ -41,7 +44,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
         <nav className="flex-1 overflow-y-auto">
           <ul className="space-y-1">
-            {NAV_ITEMS.map((item) => (
+            {NAV_ITEMS.filter((item) => aLeRole(user, item.role)).map((item) => (
               <li key={item.to}>
                 <NavLink
                   to={item.to}

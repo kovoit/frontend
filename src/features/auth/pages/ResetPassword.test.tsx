@@ -7,7 +7,9 @@ describe('mot de passe oublié', () => {
   it('depuis la connexion : demande un lien, même réponse que le compte existe ou non', async () => {
     renderAt('/')
     await userEvent.click(await screen.findByRole('link', { name: 'Mot de passe oublié ?' }))
-    await userEvent.type(await screen.findByLabelText('Email'), 'chef@kovoittg.com')
+    // Page chargée à la demande : attendre qu'elle remplace la connexion avant de saisir
+    await screen.findByRole('heading', { name: 'Mot de passe oublié' })
+    await userEvent.type(screen.getByLabelText('Email'), 'chef@kovoittg.com')
     await userEvent.click(screen.getByRole('button', { name: 'Recevoir le lien' }))
 
     expect(await screen.findByText(/Si cette adresse correspond/)).toBeVisible()

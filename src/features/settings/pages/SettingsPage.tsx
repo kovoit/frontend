@@ -6,6 +6,8 @@ import { Card } from '@/components/ui/Card'
 import { QueryError } from '@/components/ui/QueryError'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { formatDateTime } from '@/utils/format'
+import { useAuth } from '@/features/auth/authContext'
+import { aLeRole } from '@/features/auth/types'
 import { useParametres } from '../api'
 import { EditParametreDialog } from '../components/EditParametreDialog'
 import type { Parametre } from '../types'
@@ -25,7 +27,7 @@ function parGroupe(parametres: Parametre[]) {
   return [...groupes.entries()]
 }
 
-function ParametreRow({ parametre, onEdit }: { parametre: Parametre; onEdit: () => void }) {
+function ParametreRow({ parametre, onEdit }: { parametre: Parametre; onEdit?: () => void }) {
   const auteur = parametre.modifie_par
   return (
     <li className="flex flex-wrap items-center gap-x-4 gap-y-2 py-3">
@@ -38,15 +40,17 @@ function ParametreRow({ parametre, onEdit }: { parametre: Parametre; onEdit: () 
         </p>
       </div>
       <span className="text-base font-bold tabular-nums">{formatValeur(parametre)}</span>
-      <Button
-        variant="ghost"
-        className="px-3 py-1.5"
-        aria-label={`Modifier : ${parametre.description}`}
-        onClick={onEdit}
-      >
-        <MdEdit aria-hidden className="h-4 w-4" />
-        Modifier
-      </Button>
+      {onEdit && (
+        <Button
+          variant="ghost"
+          className="px-3 py-1.5"
+          aria-label={`Modifier : ${parametre.description}`}
+          onClick={onEdit}
+        >
+          <MdEdit aria-hidden className="h-4 w-4" />
+          Modifier
+        </Button>
+      )}
     </li>
   )
 }
@@ -55,6 +59,7 @@ export function SettingsPage() {
   const { data, isPending, isError, error, refetch } = useParametres()
   const [enCours, setEnCours] = useState<Parametre | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  const peutModifier = aLeRole(useAuth().user, 'parametres')
 
   if (isPending) {
     return (
@@ -83,10 +88,15 @@ export function SettingsPage() {
               <ParametreRow
                 key={parametre.cle}
                 parametre={parametre}
-                onEdit={() => {
-                  setNotice(null)
-                  setEnCours(parametre)
-                }}
+                // Consultation pour tous ; modification réservée au rôle Paramètres
+                onEdit={
+                  peutModifier
+                    ? () => {
+                        setNotice(null)
+                        setEnCours(parametre)
+                      }
+                    : undefined
+                }
               />
             ))}
           </ul>

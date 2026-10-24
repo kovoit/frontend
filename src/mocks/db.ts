@@ -11,6 +11,7 @@ export const MOCK_ACCOUNTS: MockAccount[] = [
     nom: 'Kovoit',
     prenom: 'Admin',
     is_staff: true,
+    roles: ['audit', 'finance', 'moderation', 'parametres'],
   },
   {
     id: '2',
@@ -19,15 +20,34 @@ export const MOCK_ACCOUNTS: MockAccount[] = [
     nom: 'Mensah',
     prenom: 'Kodjo',
     is_staff: false,
+    roles: [],
+  },
+  {
+    // Admin limité au rôle Finance (transactions et retraits)
+    id: '3',
+    email: 'finance@kovoit.tg',
+    password: 'Finance123!',
+    nom: 'Lawson',
+    prenom: 'Ama',
+    is_staff: true,
+    roles: ['finance'],
   },
 ]
 
-export const toPublicUser = ({ id, email, nom, prenom, is_staff }: MockAccount): AuthUser => ({
+export const toPublicUser = ({
   id,
   email,
   nom,
   prenom,
   is_staff,
+  roles,
+}: MockAccount): AuthUser => ({
+  id,
+  email,
+  nom,
+  prenom,
+  is_staff,
+  roles,
 })
 
 // Simule le cookie httpOnly de refresh : conservé en sessionStorage pour survivre au rechargement.

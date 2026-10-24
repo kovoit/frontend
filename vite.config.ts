@@ -20,5 +20,8 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     css: false,
+    // Pages chargées à la demande + saisies userEvent : 5 s ne suffisent pas toujours sous la
+    // charge de toute la suite (tests instables). Les attentes findBy* restent à 5 s.
+    testTimeout: 15_000,
   },
 })

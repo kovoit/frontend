@@ -8,6 +8,9 @@ import type { Id } from '@/api/types'
 //   GET  /auth/admin/moi/              → AuthUser | 401 | 403
 //   POST /auth/admin/deconnexion/      → révoque le refresh et supprime le cookie
 
+/** Rôles du back-office (backend : apps/accounts/roles.py). Un admin sans rôle attribué les a tous. */
+export type AdminRole = 'moderation' | 'finance' | 'audit' | 'parametres'
+
 /** Sous-ensemble de UtilisateurAdminSerializer utilisé par le back-office. */
 export type AuthUser = {
   id: Id
@@ -15,7 +18,13 @@ export type AuthUser = {
   nom: string
   prenom: string
   is_staff: boolean
+  /** Rôles effectifs renvoyés par le backend, qui reste seul juge (403 sinon) */
+  roles: AdminRole[]
 }
+
+/** Absent (ancienne session) : on n'interdit rien côté écran, le backend contrôle. */
+export const aLeRole = (user: AuthUser | null, role: AdminRole | undefined) =>
+  !role || !user?.roles || user.roles.includes(role)
 
 /** Saisie du formulaire de connexion (convertie en { email, mot_de_passe } pour l'API). */
 export type LoginPayload = {
