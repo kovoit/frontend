@@ -15,7 +15,10 @@ export const repartir = (prix: number) => {
 export function mockTarification(km: number, places: number): Tarification {
   const minutes = Math.round((km / 25) * 60)
   const litres = (km * 8) / 100
-  const total = litres * 817
+  const carburant = litres * 817
+  const temps = (minutes / 60) * 300
+  const entretien = km * 15
+  const total = carburant + temps + entretien
   const part = total / (places + 1)
   const contribution = total - part
   const brut = contribution / (1 - TAUX / 100)
@@ -30,9 +33,9 @@ export function mockTarification(km: number, places: number): Tarification {
     passagers_prevus: places,
     consommation_retenue_l_100km: '8.000',
     carburant_litres: s(litres, 3),
-    cout_carburant: s(total, 3),
-    cout_temps: '0.000',
-    cout_entretien: '0.000',
+    cout_carburant: s(carburant, 3),
+    cout_temps: s(temps, 3),
+    cout_entretien: s(entretien, 3),
     cout_total: s(total, 3),
     part_conducteur: s(part, 3),
     contribution_passagers: s(contribution, 3),
@@ -48,8 +51,8 @@ export function mockTarification(km: number, places: number): Tarification {
       consommation_l_100km: '8.000',
       source_consommation: 'reference_voiture',
       majoration_charge_par_passager_pct: '0.000',
-      cout_horaire_conducteur: '0.000',
-      entretien_par_km: '0.000',
+      cout_horaire_conducteur: '300.000',
+      entretien_par_km: '15.000',
       taux_commission_pct: '15.000',
       arrondi_prix_fcfa: 5,
       prix_minimum_place: 0,

@@ -46,7 +46,7 @@ const GROUPES: Array<{ code: string; libelle: string; lignes: Ligne[] }> = [
       ],
       [
         'cout_horaire_conducteur',
-        0,
+        300,
         'entier',
         'Coût du temps du conducteur (F CFA/h). 0 : partage des seuls frais du véhicule.',
         'F CFA/h',
@@ -54,7 +54,7 @@ const GROUPES: Array<{ code: string; libelle: string; lignes: Ligne[] }> = [
       ],
       [
         'entretien_voiture_par_km',
-        0,
+        15,
         'decimal',
         "Entretien et usure d'une voiture (F CFA/km). 0 : non compté.",
         'F CFA/km',
@@ -62,7 +62,7 @@ const GROUPES: Array<{ code: string; libelle: string; lignes: Ligne[] }> = [
       ],
       [
         'entretien_moto_par_km',
-        0,
+        5,
         'decimal',
         "Entretien et usure d'une moto (F CFA/km). 0 : non compté.",
         'F CFA/km',
