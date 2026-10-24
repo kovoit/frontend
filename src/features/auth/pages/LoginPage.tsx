@@ -82,7 +82,7 @@ export function LoginPage() {
           label="Email"
           type="email"
           autoComplete="username"
-          placeholder="admin@kovoit.tg"
+          placeholder="admin@kovoittg.com"
           icon={<MdMailOutline className="h-5 w-5" />}
           error={errors.email?.message}
           {...register('email')}
