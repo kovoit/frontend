@@ -1,9 +1,11 @@
 import { HiX } from 'react-icons/hi'
 import { NavLink } from 'react-router'
-import { NAV_ITEMS } from '@/app/navigation'
+import { NAV_ITEMS, type NavBadge } from '@/app/navigation'
 import { useAuth } from '@/features/auth/authContext'
 import { aLeRole } from '@/features/auth/types'
+import { useOpenReportsCount } from '@/features/reports/api'
 import { cn } from '@/utils/cn'
+import { formatNumber } from '@/utils/format'
 import { Logo } from './Logo'
 
 type SidebarProps = {
@@ -11,9 +13,30 @@ type SidebarProps = {
   onClose: () => void
 }
 
+const BADGE_LABELS: Record<NavBadge, (count: number) => string> = {
+  signalements_ouverts: (count) =>
+    count > 1 ? `${formatNumber(count)} signalements ouverts` : '1 signalement ouvert',
+}
+
+/** Pastille rouge du menu ; rien à 0. Texte blanc sur danger-600 : contraste AA. */
+function MenuBadge({ badge, count }: { badge: NavBadge; count: number | undefined }) {
+  if (!count || count <= 0) return null
+  return (
+    <span className="ml-auto inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-danger-600 px-1.5 py-0.5 text-xs font-bold tabular-nums text-white">
+      <span aria-hidden>{count > 99 ? '99+' : formatNumber(count)}</span>
+      <span className="sr-only">{` (${BADGE_LABELS[badge](count)})`}</span>
+    </span>
+  )
+}
+
 // Sidebar Horizon re-skinnée Nana Tech.
 export function Sidebar({ open, onClose }: SidebarProps) {
   const { user } = useAuth()
+  // Interrogé seulement pour un admin modération (sinon la requête est désactivée).
+  const { data: compteur } = useOpenReportsCount()
+  const badgeCounts: Record<NavBadge, number | undefined> = {
+    signalements_ouverts: compteur?.signalements_ouverts,
+  }
   return (
     <>
       {open && (
@@ -63,6 +86,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                     <>
                       <span className={isActive ? 'text-accent-500' : undefined}>{item.icon}</span>
                       {item.label}
+                      {item.badge && (
+                        <MenuBadge badge={item.badge} count={badgeCounts[item.badge]} />
+                      )}
                       {isActive && (
                         <span
                           aria-hidden

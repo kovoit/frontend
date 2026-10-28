@@ -65,6 +65,7 @@ export function buildMockStats(periode: Periode, today = new Date()): DashboardS
       kyc_en_attente: 14,
       signalements_ouverts: 3,
       litiges: parStatut.litige,
+      retraits_en_attente: 2,
     },
     evolution,
     reservations_par_statut: parStatut,

@@ -30,11 +30,17 @@ export type DashboardStats = {
     utilisateurs_verifies: number
     conducteurs_verifies: number
   }
-  /** Files de travail de l'administrateur, à l'instant de la requête */
+  /**
+   * Files de travail de l'administrateur, à l'instant de la requête. Le back-office n'affiche
+   * que les cartes des rôles de l'admin (D-55) : modération (KYC, signalements, litiges),
+   * finance (retraits).
+   */
   a_traiter: {
     kyc_en_attente: number
     signalements_ouverts: number
     litiges: number
+    /** Retraits au statut en_attente, à verser à la main sur Flooz / Mixx */
+    retraits_en_attente: number
   }
   /** Un point par jour de la période (date ISO AAAA-MM-JJ, heure de Lomé) */
   evolution: Array<{ date: string; trajets: number; passagers: number }>

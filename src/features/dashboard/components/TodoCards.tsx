@@ -1,45 +1,34 @@
-import type { ReactNode } from 'react'
-import { MdCheckCircle, MdChevronRight, MdGavel, MdReportProblem, MdVerifiedUser } from 'react-icons/md'
+import { MdCheckCircle, MdChevronRight } from 'react-icons/md'
 import { Link } from 'react-router'
+import type { AdminRole } from '@/features/auth/types'
+import { cn } from '@/utils/cn'
 import { formatNumber } from '@/utils/format'
 import type { DashboardStats } from '../types'
+import { todoItems } from './todoItems'
 
-type TodoItem = {
-  label: string
-  count: number
-  to: string
-  icon: ReactNode
+type TodoCardsProps = {
+  aTraiter: DashboardStats['a_traiter']
+  /** Vrai si l'admin connecté a ce rôle */
+  peutVoir: (role: AdminRole) => boolean
 }
 
-// Files de travail : chaque carte ouvre la liste filtrée correspondante.
-export function TodoCards({ aTraiter }: { aTraiter: DashboardStats['a_traiter'] }) {
-  const items: TodoItem[] = [
-    {
-      label: 'Dossiers KYC en attente',
-      count: aTraiter.kyc_en_attente,
-      to: '/admin/kyc?statut=en_attente',
-      icon: <MdVerifiedUser className="h-5 w-5" />,
-    },
-    {
-      label: 'Signalements ouverts',
-      count: aTraiter.signalements_ouverts,
-      to: '/admin/reports?statut=ouvert',
-      icon: <MdReportProblem className="h-5 w-5" />,
-    },
-    {
-      label: 'Litiges à trancher',
-      count: aTraiter.litiges,
-      to: '/admin/bookings?statut=litige',
-      icon: <MdGavel className="h-5 w-5" />,
-    },
-  ]
+// Files de travail : chaque carte ouvre la liste filtrée correspondante. Un admin ne voit que
+// les cartes de ses rôles ; sans aucun rôle concerné, la section n'est pas affichée.
+export function TodoCards({ aTraiter, peutVoir }: TodoCardsProps) {
+  const items = todoItems(aTraiter).filter((item) => peutVoir(item.role))
+  if (items.length === 0) return null
 
   return (
     <section aria-labelledby="todo-title">
       <h2 id="todo-title" className="mb-3 text-lg font-bold">
         À traiter
       </h2>
-      <ul className="grid gap-4 md:grid-cols-3">
+      <ul
+        className={cn(
+          'grid gap-4',
+          items.length >= 4 ? 'md:grid-cols-2 xl:grid-cols-4' : 'md:grid-cols-3',
+        )}
+      >
         {items.map((item) => {
           const pending = item.count > 0
           return (

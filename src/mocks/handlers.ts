@@ -89,11 +89,14 @@ export const handlers = [
       return invalid({ periode: ['Période invalide.'] })
     }
     const stats = buildMockStats(periode as Periode)
-    // Files de travail cohérentes avec les listes simulées (KYC, signalements, litiges).
+    // Files de travail cohérentes avec les listes simulées (KYC, signalements, litiges, retraits).
     stats.a_traiter = {
       kyc_en_attente: db.dossiers.filter((d) => d.statut === 'en_attente').length,
       signalements_ouverts: db.signalements.filter((s) => s.statut === 'ouvert').length,
       litiges: db.reservations.filter((r) => r.statut === 'litige').length,
+      retraits_en_attente: db.transactions.filter(
+        (t) => t.type === 'retrait' && t.statut === 'en_attente',
+      ).length,
     }
     return ok(stats)
   }),

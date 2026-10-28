@@ -1,7 +1,10 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/api/client'
 import type { Id, Paginated } from '@/api/types'
+import { useAuth } from '@/features/auth/authContext'
+import { aLeRole } from '@/features/auth/types'
 import type {
+  CompteurSignalements,
   DecisionLitige,
   SignalementDetail,
   SignalementListFilters,
@@ -11,6 +14,27 @@ import type {
 export const reportKeys = {
   list: (filters: SignalementListFilters) => ['reports', 'list', filters] as const,
   detail: (id: Id) => ['reports', 'detail', id] as const,
+  compteur: ['reports', 'compteur'] as const,
+}
+
+/** Rafraîchissement du badge « signalements ouverts » du menu */
+export const COMPTEUR_REFETCH_MS = 60_000
+
+/**
+ * Nombre de signalements ouverts (badge du menu). Interrogé seulement si l'admin a le rôle
+ * modération : la route répond 403 aux autres rôles.
+ */
+export function useOpenReportsCount() {
+  const { user } = useAuth()
+  return useQuery({
+    queryKey: reportKeys.compteur,
+    queryFn: async () => {
+      const { data } = await api.get<CompteurSignalements>('/admin/signalements/compteur/')
+      return data
+    },
+    enabled: user !== null && aLeRole(user, 'moderation'),
+    refetchInterval: COMPTEUR_REFETCH_MS,
+  })
 }
 
 export function useReportList(filters: SignalementListFilters) {
@@ -52,8 +76,17 @@ function useReportAction<TPayload>(id: Id) {
     },
     onSuccess: (signalement) => {
       queryClient.setQueryData(reportKeys.detail(id), signalement)
-      // Un litige tranché change le statut de la réservation (et du trajet côté backend).
-      for (const key of [['reports', 'list'], ['bookings'], ['trips'], ['users'], ['dashboard']]) {
+      // Un litige tranché change le statut de la réservation (et du trajet côté backend) ;
+      // le badge du menu doit baisser aussitôt.
+      const keys = [
+        ['reports', 'list'],
+        reportKeys.compteur,
+        ['bookings'],
+        ['trips'],
+        ['users'],
+        ['dashboard'],
+      ]
+      for (const key of keys) {
         void queryClient.invalidateQueries({ queryKey: key })
       }
     },

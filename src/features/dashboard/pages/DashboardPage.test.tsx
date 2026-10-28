@@ -3,13 +3,28 @@ import userEvent from '@testing-library/user-event'
 import { http } from 'msw'
 import { describe, expect, it } from 'vitest'
 import { env } from '@/config/env'
+import type { AdminRole } from '@/features/auth/types'
 import { buildMockStats } from '@/mocks/dashboard'
+import { MOCK_ACCOUNTS, mockSession, toPublicUser } from '@/mocks/db'
 import { fail, ok } from '@/mocks/envelope'
 import { server } from '@/mocks/server'
 import { renderAt } from '@/test/renderWithRouter'
 import type { DashboardStats } from '../types'
 
 const STATS_URL = `${env.apiUrl}/admin/tableau-de-bord/`
+const MOI_URL = `${env.apiUrl}/auth/admin/moi/`
+const COMPTEUR_URL = `${env.apiUrl}/admin/signalements/compteur/`
+
+/** Session admin dont /auth/admin/moi/ renvoie exactement ces rôles. */
+function asAdminWithRoles(roles: AdminRole[]) {
+  mockSession.start('1')
+  server.use(
+    http.get(MOI_URL, () => ok({ ...toPublicUser(MOCK_ACCOUNTS[0]!), roles })),
+    http.get(COMPTEUR_URL, () => ok({ signalements_ouverts: 0 })),
+  )
+}
+
+const MODERATION_CARDS = [/Dossiers KYC en attente/, /Signalements ouverts/, /Litiges à trancher/]
 
 function fixedStats(overrides: Partial<DashboardStats> = {}): DashboardStats {
   const stats = buildMockStats('30j', new Date('2026-10-08T12:00:00Z'))
@@ -25,7 +40,7 @@ function fixedStats(overrides: Partial<DashboardStats> = {}): DashboardStats {
       utilisateurs_verifies: 412,
       conducteurs_verifies: 87,
     },
-    a_traiter: { kyc_en_attente: 14, signalements_ouverts: 0, litiges: 2 },
+    a_traiter: { kyc_en_attente: 14, signalements_ouverts: 0, litiges: 2, retraits_en_attente: 5 },
     ...overrides,
   }
 }
@@ -176,5 +191,53 @@ describe('tableau de bord', () => {
 
     await userEvent.click(within(alert).getByRole('button', { name: 'Réessayer' }))
     expect(await screen.findByRole('region', { name: 'Indicateurs clés' })).toBeVisible()
+  })
+})
+
+describe('cartes « À traiter » selon les rôles (D-55)', () => {
+  it('admin finance : « Retraits à verser » avec le nombre, sans les cartes de modération', async () => {
+    asAdminWithRoles(['finance'])
+    server.use(http.get(STATS_URL, () => ok(fixedStats())))
+    renderAt('/admin')
+
+    const retraits = await screen.findByRole('link', { name: /Retraits à verser/ })
+    expect(retraits).toHaveAttribute('href', '/admin/transactions')
+    expect(within(retraits).getByText('5')).toBeVisible()
+    for (const name of MODERATION_CARDS) {
+      expect(screen.queryByRole('link', { name })).not.toBeInTheDocument()
+    }
+  })
+
+  it('admin modération : les cartes de modération, sans celle des retraits', async () => {
+    asAdminWithRoles(['moderation'])
+    server.use(http.get(STATS_URL, () => ok(fixedStats())))
+    renderAt('/admin')
+
+    const section = await screen.findByRole('region', { name: 'À traiter' })
+    for (const name of MODERATION_CARDS) {
+      expect(within(section).getByRole('link', { name })).toBeVisible()
+    }
+    expect(within(section).queryByRole('link', { name: /Retraits à verser/ })).not.toBeInTheDocument()
+  })
+
+  it('superutilisateur (4 rôles) : toutes les cartes', async () => {
+    server.use(http.get(STATS_URL, () => ok(fixedStats())))
+    renderAt('/admin', { asAdmin: true })
+
+    const section = await screen.findByRole('region', { name: 'À traiter' })
+    expect(within(section).getAllByRole('link')).toHaveLength(4)
+    expect(within(section).getByRole('link', { name: /Retraits à verser/ })).toBeVisible()
+  })
+
+  it('admin sans rôle de modération ni de finance : aucune carte « À traiter »', async () => {
+    asAdminWithRoles(['audit', 'parametres'])
+    server.use(http.get(STATS_URL, () => ok(fixedStats())))
+    renderAt('/admin')
+
+    expect(await screen.findByRole('region', { name: 'Indicateurs clés' })).toBeVisible()
+    expect(screen.queryByRole('region', { name: 'À traiter' })).not.toBeInTheDocument()
+    expect(screen.queryByText('À traiter')).not.toBeInTheDocument()
+    // Le reste du tableau de bord est inchangé.
+    expect(screen.getByTestId('chart-line')).toBeInTheDocument()
   })
 })

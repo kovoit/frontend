@@ -12,6 +12,9 @@ import {
   MdVerifiedUser,
 } from 'react-icons/md'
 
+/** Compteur affiché en badge à côté d'une entrée du menu */
+export type NavBadge = 'signalements_ouverts'
+
 export type NavItem = {
   label: string
   /** Chemin absolu sous /admin */
@@ -19,6 +22,8 @@ export type NavItem = {
   icon: ReactNode
   /** Rôle requis (absent : tout administrateur) */
   role?: AdminRole
+  /** Badge rouge (masqué à 0) */
+  badge?: NavBadge
 }
 
 const iconClass = 'h-5 w-5'
@@ -54,6 +59,7 @@ export const NAV_ITEMS: NavItem[] = [
     to: '/admin/reports',
     icon: <MdReportProblem className={iconClass} />,
     role: 'moderation',
+    badge: 'signalements_ouverts',
   },
   {
     label: 'Transactions',

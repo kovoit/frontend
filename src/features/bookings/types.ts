@@ -21,6 +21,11 @@ export type ReservationListItem = {
   prix: number
   /** Ancien modèle (frais payés par le passager) : 0 pour les nouvelles réservations */
   frais_service: number
+  /**
+   * Montant payé par le passager (prix + frais de service), remboursé s'il obtient gain de
+   * cause. Pas encore exposé par les routes admin (octobre 2026) : optionnel en attendant.
+   */
+  montant_total?: number
   /** Taux figé à la publication du trajet (chaîne décimale, ex. « 15.00 ») */
   taux_commission_pct: string
   /** Commission Kovoit et net conducteur de cette place : commission + net = prix */

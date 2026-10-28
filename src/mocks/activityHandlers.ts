@@ -132,7 +132,7 @@ function toSignalementListItem(s: MockSignalement): SignalementListItem {
   }
 }
 
-function toSignalementDetail(s: MockSignalement): SignalementDetail {
+export function toSignalementDetail(s: MockSignalement): SignalementDetail {
   const res = db.reservations.find((r) => r.id === s.reservation_id)!
   return {
     ...toSignalementListItem(s),
@@ -215,6 +215,19 @@ export const activityHandlers = [
       .sort((a, b) => a.cree_le.localeCompare(b.cree_le))
       .map(toSignalementListItem)
     return ok(paginate(items, request))
+  }),
+
+  // Avant « :id/ » : MSW retient le premier handler qui correspond.
+  http.get(url('/admin/signalements/compteur/'), ({ request }) => {
+    const account = userFromAuthHeader(request.headers.get('Authorization'))
+    if (account?.is_staff !== true) return unauthorized()
+    if (!account.roles.includes('moderation')) {
+      return fail(403, "Votre rôle d'administrateur ne permet pas cette action.", 'ROLE_ADMIN_INSUFFISANT')
+    }
+    return ok(
+      { signalements_ouverts: db.signalements.filter((s) => s.statut === 'ouvert').length },
+      { message: 'Compteur récupéré.' },
+    )
   }),
 
   http.get(url('/admin/signalements/:id/'), ({ request, params }) => {

@@ -11,6 +11,8 @@ import type { ReservationListItem } from '@/features/bookings/types'
 //        Si la réservation est en litige, decision est obligatoire (400 DECISION_REQUISE) :
 //        la réservation passe à « cloturee » et le backend paie le conducteur
 //        (crediter_conducteur) ou rembourse le passager (rembourser_passager).
+//   GET  /admin/signalements/compteur/                    → CompteurSignalements
+//        rôle moderation requis (403 ROLE_ADMIN_INSUFFISANT sinon) ; badge du menu (D-07, D-28, D-41)
 
 export type DecisionLitige = 'crediter_conducteur' | 'rembourser_passager'
 
@@ -32,6 +34,11 @@ export type SignalementDetail = Omit<SignalementListItem, 'reservation'> & {
   decision: DecisionLitige | ''
   traite_le: string | null
   traite_par: { id: Id; nom: string; prenom: string } | null
+}
+
+/** Nombre de signalements au statut ouvert, à l'instant de la requête */
+export type CompteurSignalements = {
+  signalements_ouverts: number
 }
 
 export type SignalementListFilters = {

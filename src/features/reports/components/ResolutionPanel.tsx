@@ -30,6 +30,36 @@ const arbitrateSchema = z.object({
 type ResolveForm = z.infer<typeof resolveSchema>
 type ArbitrateForm = z.infer<typeof arbitrateSchema>
 
+/** Montant renvoyé par l'API et exploitable ; sinon on n'affiche aucun chiffre. */
+const estMontant = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value)
+
+type Reservation = SignalementDetail['reservation']
+
+/** Ce que reçoit le conducteur : net et commission, tels que renvoyés par l'API. */
+function detailConducteur({ net_conducteur, commission }: Reservation): string {
+  if (estMontant(net_conducteur) && estMontant(commission)) {
+    return `Le conducteur reçoit ${formatFcfa(net_conducteur)} (commission Kovoit ${formatFcfa(commission)}).`
+  }
+  return 'Le conducteur reçoit le prix du trajet, commission Kovoit déduite.'
+}
+
+/**
+ * Montant remboursé au passager : montant_total si l'API le fournit ; à défaut, le prix seul
+ * quand il n'y a aucun frais de service (le prix est alors exactement ce que le passager a payé).
+ * Aucune addition côté front : dans le doute, phrase sans montant.
+ */
+function detailPassager({ montant_total, prix, frais_service }: Reservation): string {
+  const rembourse = estMontant(montant_total)
+    ? montant_total
+    : frais_service === 0 && estMontant(prix)
+      ? prix
+      : undefined
+  return rembourse === undefined
+    ? 'Le passager est remboursé du montant payé.'
+    : `Le passager est remboursé de ${formatFcfa(rembourse)}.`
+}
+
 function ResolveDialog({ signalement, onClose }: { signalement: SignalementDetail; onClose: () => void }) {
   const mutation = useResolveReport(signalement.id)
   const { register, handleSubmit, formState: { errors } } = useForm<ResolveForm>({
@@ -76,17 +106,17 @@ function ArbitrateDialog({ signalement, onClose }: { signalement: SignalementDet
     resolver: zodResolver(arbitrateSchema),
   })
   const decision = useWatch({ control, name: 'decision' })
-  const { passager, conducteur, prix } = signalement.reservation
+  const { passager, conducteur } = signalement.reservation
   const options = [
     {
       value: 'crediter_conducteur' as const,
       title: `En faveur du conducteur (${conducteur.prenom} ${conducteur.nom})`,
-      detail: `Le trajet est dû : avec le portefeuille, les ${formatFcfa(prix)} gelés sont versés au conducteur.`,
+      detail: detailConducteur(signalement.reservation),
     },
     {
       value: 'rembourser_passager' as const,
       title: `En faveur du passager (${passager.prenom} ${passager.nom})`,
-      detail: `Avec le portefeuille, les ${formatFcfa(prix)} gelés sont remboursés au passager.`,
+      detail: detailPassager(signalement.reservation),
     },
   ]
 
