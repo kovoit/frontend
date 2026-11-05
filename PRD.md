@@ -20,8 +20,8 @@ Un utilisateur a un seul compte et bascule entre les modes passager et conducteu
 
 ### Passager
 
-- [ ] Créer un compte (nom complet, email, téléphone, mot de passe) et vérifier son numéro par code OTP SMS à 6 chiffres
-- [ ] Se connecter par email et mot de passe
+- [ ] Créer un compte (prénom, nom, email, téléphone, mot de passe) et vérifier son email par un code à 6 chiffres
+- [ ] Se connecter par email et mot de passe ; réinitialiser son mot de passe par code email
 - [ ] Soumettre son KYC passager
 - [ ] Chercher un trajet : point de départ, point d'arrivée, date, heure
 - [ ] Voir le profil du conducteur : statut vérifié, note, taux de fiabilité, véhicule
@@ -60,21 +60,23 @@ Tout ce que fait le passager, plus :
 
 ## Authentification
 
-Décision du 8 octobre 2026 : la connexion se fait par **email et mot de passe**, comme sur les maquettes. Le téléphone reste obligatoire et vérifié par SMS, car c'est lui qui débloque la recherche de trajets.
+Décision du 30 octobre 2026 (remplace celles du 8/10 et du 10/10) : **inscription et connexion classiques par email et mot de passe**. L'email est vérifié une fois, à l'inscription, par un code à 6 chiffres envoyé par email (Gmail SMTP). Le téléphone est obligatoire mais n'est pas vérifié. Pas de SMS ni de connexion Google dans le MVP. Détail des règles et du contrat : `backend/PRD.md` §4 et §15.
 
 **Inscription (app mobile)**
 
-1. Saisie du nom complet, de l'email, du téléphone (+228) et du mot de passe, puis acceptation des CGU et de la politique de confidentialité.
-2. Envoi d'un code OTP à 6 chiffres par SMS au numéro saisi, avec renvoi possible après un délai et modification du numéro possible.
-3. Une fois le code validé, le compte passe au niveau « téléphone vérifié ».
+1. Saisie du prénom, du nom, de l'email, du téléphone (+228) et du mot de passe, puis acceptation des CGU et de la politique de confidentialité.
+2. Envoi d'un code à 6 chiffres à l'email saisi, avec renvoi possible après un délai et modification de l'email possible.
+3. Une fois le code validé, le compte passe au niveau « email vérifié ».
 
-**Connexion** : email et mot de passe, avec « Mot de passe oublié » par email. « Continuer avec Google » figure sur les maquettes ; son activation reste à confirmer (voir Questions ouvertes). Un compte créé via Google doit quand même vérifier son téléphone par SMS.
+**Connexion** : email et mot de passe. Un compte dont l'email n'est pas vérifié reçoit un nouveau code et doit le saisir avant d'accéder à l'application.
+
+**Mot de passe oublié** : saisie de l'email, réception d'un code à 6 chiffres, saisie du code et d'un nouveau mot de passe. La réponse ne révèle pas si l'email a un compte.
 
 **Règles**
 
-- Email et téléphone sont uniques.
+- L'email est unique.
 - Le mot de passe est stocké haché par le backend (algorithme Django par défaut).
-- Le code OTP SMS d'inscription (6 chiffres) est distinct du code de départ d'une réservation (4 chiffres).
+- Le code email à 6 chiffres (vérification, mot de passe oublié) est distinct du code de départ d'une réservation (4 chiffres).
 - Back-office : connexion par email et mot de passe, réservée aux comptes ayant le rôle administrateur.
 
 ## KYC
@@ -83,7 +85,7 @@ Le niveau de vérification dépend du rôle. Dans le MVP, l'administrateur valid
 
 | Rôle       | Pièces demandées                                                                     | Ce que le KYC débloque |
 |------------|--------------------------------------------------------------------------------------|------------------------|
-| Passager   | Téléphone vérifié (OTP), pièce d'identité, selfie                                    | Réserver une place     |
+| Passager   | Email vérifié, pièce d'identité, selfie                                              | Réserver une place     |
 | Conducteur | Pièces du passager + permis de conduire, carte grise ou assurance, photo du véhicule | Publier un trajet      |
 
 **Statuts d'un dossier** : non_verifie → en_attente → verifie ou rejete. Un dossier rejeté porte un motif et peut être soumis à nouveau.
@@ -91,7 +93,7 @@ Le niveau de vérification dépend du rôle. Dans le MVP, l'administrateur valid
 **Règles d'accès**
 
 - Sans compte : aucun accès.
-- Compte avec téléphone vérifié : peut chercher et consulter les trajets.
+- Compte avec email vérifié : peut chercher et consulter les trajets.
 - KYC passager verifie : peut réserver.
 - KYC conducteur verifie et véhicule déclaré : peut publier des trajets.
 - Compte suspendu : ne peut ni réserver ni publier ; ses réservations à venir sont annulées et remboursées.
@@ -265,7 +267,7 @@ Les frais fixes ajoutés au prix du passager sont préférables : plus simples, 
 | 200                | 17 600                     | ~790 000 F     |
 | 500                | 44 000                     | ~1 980 000 F   |
 
-Ce revenu doit couvrir serveur, SMS (OTP), cartographie, frais de l'agrégateur et validation KYC. Avec quelques dizaines de conducteurs, Kovoit n'est pas rentable : c'est normal pour un pilote.
+Ce revenu doit couvrir serveur, envoi d'emails, cartographie, frais de l'agrégateur et validation KYC. Avec quelques dizaines de conducteurs, Kovoit n'est pas rentable : c'est normal pour un pilote.
 
 **Sources de revenus à terme**
 
@@ -299,7 +301,7 @@ Le MVP n'utilise pas d'IA : la correspondance, le prix, les statuts et la fiabil
 
 | Table                  | Champs principaux                                                                                                                                                                                    |
 |------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| users                  | id, email (unique), mot_de_passe_hash, google_id (optionnel), telephone (unique), telephone_verifie_le, role (utilisateur, admin), nom, prenom, photo, mode_actif (passager, conducteur), statut_compte (actif, suspendu), suspendu_jusqu_au, cree_le                                                           |
+| users                  | id, email (unique), mot_de_passe_hash, email_verifie, telephone, role (utilisateur, admin), nom, prenom, photo, mode_actif (passager, conducteur), statut_compte (actif, suspendu), suspendu_jusqu_au, cree_le                                                           |
 | kyc_dossiers           | id, user_id, type (passager, conducteur), statut (non_verifie, en_attente, verifie, rejete), motif_rejet, soumis_le, traite_le, traite_par                                                           |
 | kyc_pieces             | id, dossier_id, type_piece (identite, selfie, permis, carte_grise, assurance, photo_vehicule), chemin_fichier privé                                                                                  |
 | vehicules              | id, user_id, marque, modele, couleur, immatriculation, nb_places                                                                                                                                     |
@@ -311,7 +313,7 @@ Le MVP n'utilise pas d'IA : la correspondance, le prix, les statuts et la fiabil
 | transactions           | id, user_id, type (recharge, blocage, deblocage, debit, credit, retrait, remboursement), montant, reservation_id, reference_externe, statut, cree_le                                                 |
 | parametres             | cle, valeur, modifie_le, modifie_par                                                                                                                                                                 |
 | kyc_consultations      | id, piece_id, admin_id, consulte_le (journal obligatoire de chaque consultation de pièce)                                                                                                           |
-| otp_sms                | id, telephone, code_hash, expire_le, tentatives, valide_le                                                                                                                                           |
+| otp_codes              | id, email, objet (verification_email, reinitialisation), code_hash, expire_le, essais, utilise, cree_le                                                                                               |
 
 ## Paramètres administrateur (valeurs de départ)
 
@@ -362,7 +364,7 @@ Référence : les maquettes mobiles de `docs/Nana Tech.zip`, appliquées au mobi
 - [ ] Agrégateur de paiement retenu et frais réels
 - [ ] Google Maps ou OSRM pour les distances
 - [ ] Résultats du relevé terrain pour valider la grille de prix
-- [ ] Connexion « Continuer avec Google » : à activer dans le MVP ?
+- [x] Connexion « Continuer avec Google » : non, hors MVP (décision du 30/10/2026)
 - [ ] Écart avec les maquettes : un sélecteur **Moto / Voiture** apparaît sur l'écran de recherche, mais le PRD ne couvre que la voiture (la moto implique une autre grille de prix et une seule place)
 - [ ] Écart avec les maquettes : un bouton **Message** apparaît sur l'écran de suivi, alors que la messagerie est hors MVP (garder seulement « Appeler » ?)
 - [ ] Arbitrage d'un litige : le back-office propose « en faveur du conducteur » (montant versé) ou « en faveur du passager » (remboursement). Faut-il un partage partiel ? Que signifie la décision si le MVP démarre en espèces ?
